@@ -1,0 +1,80 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+
+foreach(required_var IN ITEMS
+    TSDUCK_SOURCE_DIR
+    TSDUCK_INSTALL_ROOT
+    TSDUCK_BUILD_ROOT
+    TSDUCK_CC
+    TSDUCK_CXX)
+  if(NOT DEFINED ${required_var} OR "${${required_var}}" STREQUAL "")
+    message(FATAL_ERROR "${required_var} is required")
+  endif()
+endforeach()
+
+if(NOT DEFINED TSDUCK_MAKE_EXECUTABLE OR "${TSDUCK_MAKE_EXECUTABLE}" STREQUAL "")
+  find_program(TSDUCK_MAKE_EXECUTABLE NAMES gmake make REQUIRED)
+endif()
+
+if(NOT DEFINED TSDUCK_JOBS OR "${TSDUCK_JOBS}" STREQUAL "")
+  set(TSDUCK_JOBS 1)
+endif()
+
+if(NOT DEFINED TSDUCK_CPPFLAGS_EXTRA)
+  set(TSDUCK_CPPFLAGS_EXTRA "")
+endif()
+
+if(NOT DEFINED TSDUCK_CXXFLAGS_EXTRA)
+  set(TSDUCK_CXXFLAGS_EXTRA "")
+endif()
+string(APPEND TSDUCK_CXXFLAGS_EXTRA " -Wno-strict-aliasing")
+string(STRIP "${TSDUCK_CXXFLAGS_EXTRA}" TSDUCK_CXXFLAGS_EXTRA)
+
+if(NOT DEFINED TSDUCK_LDFLAGS_EXTRA)
+  set(TSDUCK_LDFLAGS_EXTRA "")
+endif()
+
+set(TSDUCK_MAKE_ARGS
+  -j "${TSDUCK_JOBS}"
+  -C "${TSDUCK_SOURCE_DIR}/src"
+  install-devel
+  "CC=${TSDUCK_CC}"
+  "CXX=${TSDUCK_CXX}"
+  "SYSROOT=${TSDUCK_INSTALL_ROOT}"
+  "SYSPREFIX=/usr"
+  "USRLIBDIR=/usr/lib"
+  "BINDIR=${TSDUCK_BUILD_ROOT}"
+  "NODOC=true"
+  "NOGITHUB=true"
+  "NOPYTHON=true"
+  "NOJAVA=true"
+  "NODTAPI=true"
+  "NODEKTEC=true"
+  "NOHIDES=true"
+  "NOVATEK=true"
+  "NOCURL=true"
+  "NOPCSC=true"
+  "NOOPENSSL=true"
+  "NOSRT=true"
+  "NORIST=true"
+  "NOEDITLINE=true"
+  "NOZLIB=true"
+  "NONAMES=true"
+  "CPPFLAGS_EXTRA=${TSDUCK_CPPFLAGS_EXTRA}"
+  "CXXFLAGS_EXTRA=${TSDUCK_CXXFLAGS_EXTRA}"
+  "LDFLAGS_EXTRA=${TSDUCK_LDFLAGS_EXTRA}")
+
+if(DEFINED TSDUCK_AR AND NOT "${TSDUCK_AR}" STREQUAL "")
+  list(APPEND TSDUCK_MAKE_ARGS "AR=${TSDUCK_AR}")
+endif()
+
+if(TSDUCK_DEBUG)
+  list(APPEND TSDUCK_MAKE_ARGS "DEBUG=true")
+endif()
+
+execute_process(
+  COMMAND "${TSDUCK_MAKE_EXECUTABLE}" ${TSDUCK_MAKE_ARGS}
+  RESULT_VARIABLE TSDUCK_MAKE_RESULT)
+if(NOT TSDUCK_MAKE_RESULT EQUAL 0)
+  message(FATAL_ERROR
+    "TSDuck install-devel failed with exit code ${TSDUCK_MAKE_RESULT}")
+endif()

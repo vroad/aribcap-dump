@@ -1,0 +1,15 @@
+[submodule "vendor/tsduck"]
+	path = vendor/tsduck
+	url = https://github.com/vroad/tsduck.git
+[submodule "vendor/libaribcaption"]
+	path = vendor/libaribcaption
+	url = https://github.com/xqq/libaribcaption.git
+[submodule "vendor/CLI11"]
+	path = vendor/CLI11
+	url = https://github.com/CLIUtils/CLI11.git
+[submodule "vendor/Catch2"]
+	path = vendor/Catch2
+	url = https://github.com/catchorg/Catch2.git
+[submodule "vendor/jsoncons"]
+	path = vendor/jsoncons
+	url = https://github.com/danielaparker/jsoncons.git

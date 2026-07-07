@@ -1,0 +1,60 @@
+# Configuration file for MegaLinter
+#
+# See all available variables at https://megalinter.io/latest/config-file/ and in
+# linters documentation
+---
+# all, none, or list of linter keys
+APPLY_FIXES: none
+# If you use ENABLE_LINTERS variable, all other linters will be disabled by
+# default
+ENABLE_LINTERS:
+  # GitHub Actions workflows
+  - ACTION_ACTIONLINT
+  - ACTION_ZIZMOR
+  # C++ source files
+  - CPP_CLANG_FORMAT
+  - CPP_CPPCHECK
+  - CPP_CPPLINT
+  # Shell scripts
+  - BASH_EXEC
+  - BASH_SHELLCHECK
+  - BASH_SHFMT
+  # YAML config files
+  - YAML_PRETTIER
+  - YAML_YAMLLINT
+  - YAML_V8R
+  # Markdown files
+  - MARKDOWN_RUMDL
+  # .editorconfig enforcement
+  - EDITORCONFIG_EDITORCONFIG_CHECKER
+  # Secret scanning
+  - REPOSITORY_GITLEAKS
+  - REPOSITORY_SECRETLINT
+  - REPOSITORY_TRUFFLEHOG
+  # Repository hygiene
+  - REPOSITORY_GIT_DIFF
+  # SAST scanning
+  - REPOSITORY_SEMGREP
+  # Typo checking
+  - SPELL_CODESPELL
+CPP_CPPCHECK_ARGUMENTS: --check-level=exhaustive
+REPOSITORY_SEMGREP_RULESETS:
+  - p/security-audit
+  - p/docker-compose
+MARKDOWN_DEFAULT_STYLE: rumdl
+# By default MegaLinter treats findings from linters it classifies as
+# formatters (clang-format, shfmt, prettier, rumdl) as warnings only; report
+# them as errors like the other linters.
+FORMATTERS_DISABLE_ERRORS: false
+SHOW_ELAPSED_TIME: true
+FILTER_REGEX_EXCLUDE: >-
+  (?x)
+  (^|/)flake\.lock$
+  |(^|/)\.agent-style(/|$)
+  |(^|/)\.claude/skills/agent-style(/|$)
+  |(^|/)CLAUDE\.md$
+ADDITIONAL_EXCLUDED_DIRECTORIES:
+  - .cache
+  - .direnv
+  - .rumdl_cache
+  - build

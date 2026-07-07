@@ -1,0 +1,21 @@
+root = true
+
+[*]
+indent_style = space
+indent_size = 2
+end_of_line = lf
+charset = utf-8
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+[*.{cc,hpp}]
+indent_size = 4
+
+[.gitmodules]
+indent_style = tab
+indent_size = tab
+
+# Ordered-list continuation lines align to the content column (3 spaces),
+# which a fixed indent_size cannot express.
+[*.md]
+indent_size = unset

@@ -1,0 +1,23 @@
+# C++ build directory
+build/
+
+# C++ editor tooling
+compile_commands.json
+.cache/
+
+# VSCode
+.vscode/
+
+# Nix
+result
+result-*
+
+# direnv
+.direnv/
+.envrc
+
+# MegaLinter
+megalinter-reports/
+
+# rumdl
+.rumdl_cache/

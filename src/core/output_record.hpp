@@ -52,6 +52,16 @@ struct EitShortEvent {
     std::string text;
 };
 
+// Raw nibble values from one `content_descriptor` entry (ARIB STD-B10 / ETSI EN 300 468,
+// 6.2.9). Left undecoded: translating nibbles to genre names is a downstream consumer's job,
+// not this tool's.
+struct EitGenre {
+    std::uint8_t content_nibble_level_1 = 0;
+    std::uint8_t content_nibble_level_2 = 0;
+    std::uint8_t user_nibble_1 = 0;
+    std::uint8_t user_nibble_2 = 0;
+};
+
 // One parsed EPG event (present or following section) ready for JSONL output.
 struct EitRecord {
     // Version of the EIT (sub)table this event came from, letting consumers tell a revised
@@ -63,6 +73,8 @@ struct EitRecord {
     std::uint16_t event_id = 0;
     EitSection section = EitSection::kPresent;
     std::vector<EitShortEvent> short_events;
+    // Raw genre nibbles from `content_descriptor` entries, kept in descriptor-list order.
+    std::vector<EitGenre> genres;
     std::string extended_text;
     std::optional<std::int64_t> start_time_ms;
     std::optional<std::uint32_t> duration_sec;

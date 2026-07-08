@@ -8,6 +8,7 @@
 
 #include "tests/eit_test_utils.hpp"
 #include "tscore/tsTime.h"
+#include "tsduck/tsContentDescriptor.h"
 #include "tsduck/tsDID.h"
 #include "tsduck/tsDescriptor.h"
 #include "tsduck/tsDuckContext.h"
@@ -166,6 +167,56 @@ TEST_CASE_METHOD(EitParserFixture,
     REQUIRE(results.size() == 1);
     REQUIRE(results[0].short_events.size() == 1);
     CHECK(results[0].short_events[0].event_name == "name");
+}
+
+// -------------------------------------------------------------------------------------------------
+// content_descriptor tests
+// -------------------------------------------------------------------------------------------------
+
+TEST_CASE_METHOD(EitParserFixture,
+                 "ParseEit keeps multiple content descriptor entries as distinct list entries") {
+    auto& event = AddEvent(0x1234, ts::Time(2020, 1, 1, 0, 0, 0), cn::seconds(60));
+
+    ts::ContentDescriptor content;
+    content.entries.emplace_back(uint8_t{0x0}, uint8_t{0x1}, uint8_t{0x2}, uint8_t{0x3});
+    content.entries.emplace_back(uint8_t{0x4}, uint8_t{0x5}, uint8_t{0xF}, uint8_t{0xF});
+    event.descs.add(context, content);
+
+    const auto results = Parse();
+
+    REQUIRE(results.size() == 1);
+    REQUIRE(results[0].genres.size() == 2);
+    CHECK(results[0].genres[0].content_nibble_level_1 == 0x0);
+    CHECK(results[0].genres[0].content_nibble_level_2 == 0x1);
+    CHECK(results[0].genres[0].user_nibble_1 == 0x2);
+    CHECK(results[0].genres[0].user_nibble_2 == 0x3);
+    CHECK(results[0].genres[1].content_nibble_level_1 == 0x4);
+    CHECK(results[0].genres[1].content_nibble_level_2 == 0x5);
+    CHECK(results[0].genres[1].user_nibble_1 == 0xF);
+    CHECK(results[0].genres[1].user_nibble_2 == 0xF);
+}
+
+TEST_CASE_METHOD(EitParserFixture,
+                 "ParseEit skips a malformed content descriptor and keeps the valid ones") {
+    auto& event = AddEvent(0x1234, ts::Time(2020, 1, 1, 0, 0, 0), cn::seconds(60));
+
+    // The correct tag (DID_DVB_CONTENT) lets ParseDescriptors find it, but unlike
+    // short_event_descriptor, ContentDescriptor::deserializePayload treats a 0-byte payload as
+    // valid-but-empty (its read loop is `while (buf.canRead())`, which is immediately false).
+    // A 1-byte payload is what's actually malformed here: the payload is read in 2-byte
+    // entries, so the trailing byte fails the read and invalidates the descriptor.
+    static constexpr std::uint8_t kOneByte[] = {0x00};
+    event.descs.add(std::make_shared<ts::Descriptor>(ts::DID_DVB_CONTENT, kOneByte, 1));
+
+    ts::ContentDescriptor content;
+    content.entries.emplace_back(uint8_t{0x0}, uint8_t{0x1}, uint8_t{0x2}, uint8_t{0x3});
+    event.descs.add(context, content);
+
+    const auto results = Parse();
+
+    REQUIRE(results.size() == 1);
+    REQUIRE(results[0].genres.size() == 1);
+    CHECK(results[0].genres[0].content_nibble_level_1 == 0x0);
 }
 
 // -------------------------------------------------------------------------------------------------

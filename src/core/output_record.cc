@@ -61,6 +61,22 @@ void AddOptional(Json* object, const std::string& key, const std::optional<T>& v
     return out;
 }
 
+[[nodiscard]] Json GenresToJson(const std::vector<EitGenre>& genres) {
+    Json out = Json::array();
+    out.reserve(genres.size());
+
+    for (const auto& genre : genres) {
+        Json value;
+        value["contentNibbleLevel1"] = genre.content_nibble_level_1;
+        value["contentNibbleLevel2"] = genre.content_nibble_level_2;
+        value["userNibble1"] = genre.user_nibble_1;
+        value["userNibble2"] = genre.user_nibble_2;
+        out.push_back(std::move(value));
+    }
+
+    return out;
+}
+
 [[nodiscard]] Json RubyToJson(const std::vector<std::string>& ruby) {
     Json out = Json::array();
     out.reserve(ruby.size());
@@ -122,6 +138,7 @@ std::string ToJsonLine(const OutputRecord& record) {
                 out["eventId"] = value.event_id;
                 out["section"] = ToString(value.section);
                 out["shortEvents"] = ShortEventsToJson(value.short_events);
+                out["genres"] = GenresToJson(value.genres);
                 out["extendedText"] = value.extended_text;
                 AddOptional(&out, "startTimeMs", value.start_time_ms);
                 AddOptional(&out, "durationSec", value.duration_sec);

@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "core/ts_utils.hpp"
+#include "tsduck/tsContentDescriptor.h"
 #include "tsduck/tsDID.h"
 #include "tsduck/tsDescriptor.h"
 #include "tsduck/tsDescriptorList.h"
@@ -32,6 +33,8 @@ struct ParsedExtendedEventItem {
 struct ParsedEventText {
     // UTF-8 decoded short_event_descriptors, kept in descriptor-list order.
     std::vector<EitShortEvent> short_events;
+    // Raw genre nibbles from content_descriptor entries, kept in descriptor-list order.
+    std::vector<EitGenre> genres;
     // UTF-8 decoded text from the extended_event_descriptor's item list and trailing text,
     // joined into a single string by `FormatExtendedText()`.
     std::string extended_text;
@@ -120,6 +123,24 @@ void PushParsedExtendedEventItem(std::vector<ParsedExtendedEventItem>* items,
         }
     }
 
+    for (auto index = descriptors.search(ts::DID_DVB_CONTENT); index < descriptors.count();
+         index = descriptors.search(ts::DID_DVB_CONTENT, index + 1)) {
+        const auto& descriptor = descriptors[index];
+
+        const ts::ContentDescriptor content(context, descriptor);
+
+        if (content.isValid()) {
+            for (const auto& entry : content.entries) {
+                out.genres.push_back(EitGenre{
+                    .content_nibble_level_1 = entry.content_nibble_level_1,
+                    .content_nibble_level_2 = entry.content_nibble_level_2,
+                    .user_nibble_1 = entry.user_nibble_1,
+                    .user_nibble_2 = entry.user_nibble_2,
+                });
+            }
+        }
+    }
+
     for (auto index = descriptors.search(ts::DID_DVB_EXTENDED_EVENT); index < descriptors.count();
          index = descriptors.search(ts::DID_DVB_EXTENDED_EVENT, index + 1)) {
         const auto& descriptor = descriptors[index];
@@ -198,6 +219,7 @@ std::vector<EitRecord> ParseEit(ts::DuckContext& context, const DeserializedEit&
 
         auto event_text = ParseDescriptors(context, event.descs);
         parsed.short_events = std::move(event_text.short_events);
+        parsed.genres = std::move(event_text.genres);
         parsed.extended_text = std::move(event_text.extended_text);
         results.push_back(std::move(parsed));
     }

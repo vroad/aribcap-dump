@@ -86,6 +86,12 @@ TEST_CASE("EIT serializes unit-suffixed camelCase fields") {
         .original_network_id = 32736,
         .event_id = 10,
         .section = aribcap_dump::EitSection::kFollowing,
+        .genres = {{
+            .content_nibble_level_1 = 7,
+            .content_nibble_level_2 = 1,
+            .user_nibble_1 = 15,
+            .user_nibble_2 = 15,
+        }},
         .short_events = {{
             "jpn",
             "name",
@@ -97,8 +103,9 @@ TEST_CASE("EIT serializes unit-suffixed camelCase fields") {
     };
     CHECK(aribcap_dump::ToJsonLine(record) ==
           R"({"type":"eit","version":5,"serviceId":18432,"transportStreamId":12345)"
-          R"(,"originalNetworkId":32736,"eventId":10,"section":"following","shortEvents":[)"
-          R"({"languageCode":"jpn","eventName":"name","text":"text"}])"
+          R"(,"originalNetworkId":32736,"eventId":10,"section":"following","genres":[)"
+          R"({"contentNibbleLevel1":7,"contentNibbleLevel2":1,"userNibble1":15,"userNibble2":15}])"
+          R"(,"shortEvents":[{"languageCode":"jpn","eventName":"name","text":"text"}])"
           R"(,"extendedText":"extended","startTimeMs":1577804400000,"durationSec":1800})");
 }
 

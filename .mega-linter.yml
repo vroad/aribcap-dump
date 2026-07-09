@@ -50,8 +50,6 @@ SHOW_ELAPSED_TIME: true
 FILTER_REGEX_EXCLUDE: >-
   (?x)
   (^|/)flake\.lock$
-  |(^|/)\.agent-style(/|$)
-  |(^|/)\.claude/skills/agent-style(/|$)
   |(^|/)CLAUDE\.md$
 ADDITIONAL_EXCLUDED_DIRECTORIES:
   - .cache

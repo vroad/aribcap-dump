@@ -20,7 +20,7 @@
 namespace aribcap_dump {
 namespace {
 
-// One description/value pair from an extended_event_descriptor item, before joining
+// One description/value pair from an `extended_event_descriptor` item, before joining
 // into `ParsedEventText::extended_text`.
 struct ParsedExtendedEventItem {
     std::string description;
@@ -30,9 +30,9 @@ struct ParsedExtendedEventItem {
 // Descriptor strings gathered by `ParseDescriptors()` before they are copied into the
 // public `EitRecord` struct, which is the actual JSONL output type.
 struct ParsedEventText {
-    // UTF-8 decoded short_event_descriptors, kept in descriptor-list order.
+    // UTF-8 decoded `short_event_descriptor`s, kept in descriptor-list order.
     std::vector<EitShortEvent> short_events;
-    // UTF-8 decoded text from the extended_event_descriptor's item list and trailing text,
+    // UTF-8 decoded text from the `extended_event_descriptor`'s item list and trailing text,
     // joined into a single string by `FormatExtendedText()`.
     std::string extended_text;
 };
@@ -99,7 +99,7 @@ void PushParsedExtendedEventItem(std::vector<ParsedExtendedEventItem>* items,
                                                const ts::DescriptorList& descriptors) {
     ParsedEventText out;
     std::vector<ParsedExtendedEventItem> items;
-    // The extended_event_descriptor's free-text field, separate from its item list (ARIB
+    // The `extended_event_descriptor`'s free-text field, separate from its item list (ARIB
     // STD-B10, 6.2.7). Accumulate the same way as for items: append across descriptor
     // instances when a logical extended event is split via
     // descriptor_number/last_descriptor_number.

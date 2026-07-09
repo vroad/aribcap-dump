@@ -12,21 +12,18 @@
 namespace aribcap_dump {
 namespace {
 
-// Number of 27 MHz PCR ticks per 90 kHz PTS/DTS tick. Dividing a raw PCR by this converts it
-// to the 90 kHz unit PTS uses; `last_pcr_90k_` holds the result and compares directly with a
-// PTS value.
+// Scale factor ProgramClock uses to compute `last_pcr_90k_`. Dividing a raw PCR value (27MHz) by
+// 300 gives a PTS-comparable 90kHz value.
 constexpr std::int64_t kPcrTicksPerPtsTick = 300;
 // PTS/DTS clock rate, used to convert a tick delta to ms
 constexpr std::int64_t kPtsTicksPerSecond = 90'000;
 constexpr std::int64_t kMillisPerSecond = 1'000;
 
-// Largest forward PCR step still treated as normal progress. The 1 s bound sits far above any
-// normal PCR step, wide enough that a benign jump is not misread as a discontinuity. This tool
-// needs clock sync for timestamps, not TR 101 290 conformance.
-constexpr std::int64_t kMaxSanePcrStep90k = 90'000;
-// Number of consecutive out-of-series PCRs that confirm an unflagged discontinuity and trigger
-// re-sync.
-constexpr int kUnflaggedDiscontinuityConfirmCount = 2;
+// Treat forward PCR deltas up to 1s as continuous. Larger or backward deltas become suspect
+// samples.
+constexpr std::int64_t kMaxSanePcrDelta90k = 90'000;
+// Confirm an inferred discontinuity after this many consecutive suspect PCRs.
+constexpr int kSuspectPcrConfirmCount = 2;
 
 // Computes the signed 33-bit wrap-aware difference (to - from) in 90 kHz ticks, picking the
 // nearer direction around the 2^33 PTS/PCR wrap.
@@ -45,9 +42,9 @@ constexpr int kUnflaggedDiscontinuityConfirmCount = 2;
                                : -static_cast<std::int64_t>(backward);
 }
 
-// Returns true when a PCR step advances forward by at most one second.
-[[nodiscard]] bool IsSanePcrStep(std::int64_t delta_90k) {
-    return delta_90k >= 0 && delta_90k <= kMaxSanePcrStep90k;
+// Returns true when a PCR delta advances forward by at most one second.
+[[nodiscard]] bool IsSanePcrDelta(std::int64_t delta_90k) {
+    return delta_90k >= 0 && delta_90k <= kMaxSanePcrDelta90k;
 }
 
 }  // namespace
@@ -80,7 +77,7 @@ std::optional<PcrDiscontinuity> ProgramClock::RecordPcr(const ts::TSPacket& pack
 
     const auto pcr_90k = static_cast<std::int64_t>(pcr) / kPcrTicksPerPtsTick;
 
-    // When discontinuity_indicator is set, the old PCR<->wall-time mapping is no longer valid.
+    // A flagged discontinuity invalidates the old PCR<->wall-time mapping.
     if (packet.getDiscontinuityIndicator()) {
         AdoptNewPcrSeries(pcr_90k);
 
@@ -94,17 +91,18 @@ std::optional<PcrDiscontinuity> ProgramClock::RecordPcr(const ts::TSPacket& pack
         return std::nullopt;
     }
 
-    const auto step = WrapAwareDelta90k(*last_pcr_90k_, pcr_90k);
+    const auto delta_90k = WrapAwareDelta90k(*last_pcr_90k_, pcr_90k);
 
-    if (IsSanePcrStep(step)) {
+    if (IsSanePcrDelta(delta_90k)) {
         last_pcr_90k_ = pcr_90k;
         ClearSuspect();
 
         return std::nullopt;
     }
 
-    // Unflagged reverse or oversized jump: don't corrupt the reference on a single bad PCR.
-    return HandleUnflaggedPcrDiscontinuity(pcr_90k);
+    // With no flagged discontinuity, hold an anomalous step as suspect. Keep the current series
+    // until repeated suspect samples confirm an inferred discontinuity.
+    return HandleSuspectPcrDiscontinuity(pcr_90k);
 }
 
 void ProgramClock::AdoptNewPcrSeries(std::int64_t pcr_90k) {
@@ -113,11 +111,10 @@ void ProgramClock::AdoptNewPcrSeries(std::int64_t pcr_90k) {
     ClearSuspect();
 }
 
-std::optional<PcrDiscontinuity> ProgramClock::HandleUnflaggedPcrDiscontinuity(
-    std::int64_t pcr_90k) {
+std::optional<PcrDiscontinuity> ProgramClock::HandleSuspectPcrDiscontinuity(std::int64_t pcr_90k) {
     ++suspect_pcr_count_;
 
-    if (suspect_pcr_count_ >= kUnflaggedDiscontinuityConfirmCount) {
+    if (suspect_pcr_count_ >= kSuspectPcrConfirmCount) {
         AdoptNewPcrSeries(pcr_90k);
 
         return PcrDiscontinuity{static_cast<std::uint16_t>(*pcr_pid_), false};

@@ -22,8 +22,8 @@ class ProgramClock {
     void SetPcrPid(ts::PID pid);
     // Stores the packet's PCR, converted to 90 kHz ticks, as the latest recorded PCR.
     //
-    // Returns nullopt for normal PCR progression, or a `PcrDiscontinuity` when a flagged
-    // discontinuity or repeated out-of-series PCRs cause re-sync to a new PCR series.
+    // Returns nullopt for normal PCR progression. Returns `PcrDiscontinuity` for a discontinuity
+    // flagged by `discontinuity_indicator` or for an inferred discontinuity.
     [[nodiscard]] std::optional<PcrDiscontinuity> RecordPcr(const ts::TSPacket& packet);
     // Updates the PTS conversion reference point from an ISDB TOT and the latest recorded PCR.
     void UpdateReferencePointFromTot(const ts::TOT& tot);
@@ -35,13 +35,14 @@ class ProgramClock {
    private:
     friend class ProgramClockTestAccessor;
 
-    // Adopts `pcr_90k` as the base of a new PCR series: the old PCR<->wall-time mapping is
-    // dropped and re-sync waits for the next TOT.
+    // Adopts `pcr_90k` as the base of a new PCR series immediately. The old PCR<->wall-time
+    // mapping is dropped. PTS-to-Unix conversion remains unavailable until the next TOT.
     void AdoptNewPcrSeries(std::int64_t pcr_90k);
-    // Handles an unflagged PCR discontinuity candidate and adopts it after repeated samples.
+    // Handles a suspect PCR and adopts it as an inferred discontinuity after repeated samples.
     //
-    // Returns a `PcrDiscontinuity` on the switch, otherwise nullopt.
-    [[nodiscard]] std::optional<PcrDiscontinuity> HandleUnflaggedPcrDiscontinuity(
+    // Returns a `PcrDiscontinuity` when the suspect PCR is adopted as an inferred discontinuity;
+    // otherwise nullopt.
+    [[nodiscard]] std::optional<PcrDiscontinuity> HandleSuspectPcrDiscontinuity(
         std::int64_t pcr_90k);
     void ClearSuspect();
 
@@ -57,7 +58,8 @@ class ProgramClock {
     // PCR/wall-clock reference used for PTS conversion, created only after both PCR and TOT arrive.
     std::optional<ReferencePoint> reference_point_;
 
-    // Number of consecutive unflagged PCRs that did not fit the accepted PCR series.
+    // Number of consecutive PCRs with a delta over 1s or backward movement from the accepted PCR
+    // series.
     int suspect_pcr_count_ = 0;
 };
 

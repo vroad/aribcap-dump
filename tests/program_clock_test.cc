@@ -194,7 +194,7 @@ TEST_CASE_METHOD(ProgramClockFixture, "RecordPcr accepts in-series PCR samples")
 TEST_CASE_METHOD(ProgramClockFixture, "RecordPcr handles flagged discontinuities") {
     SetPcrPid();
 
-    SECTION("flagged reverse PCR is adopted immediately") {
+    SECTION("reverse PCR with a flagged discontinuity is adopted immediately") {
         AcceptPcr(900'000);
         REQUIRE(aribcap_dump::ProgramClockTestAccessor::LastPcr90k(clock) == 900'000);
 
@@ -222,7 +222,7 @@ TEST_CASE_METHOD(ProgramClockFixture, "RecordPcr handles flagged discontinuities
         CHECK(*plus_one_second == kWall1 + 1'000);
     }
 
-    SECTION("flagged re-sync is reported via the return value") {
+    SECTION("flagged discontinuity is reported via the return value") {
         CHECK_FALSE(RecordPcr(900'000).has_value());  // first PCR: no re-sync
         CHECK_FALSE(RecordPcr(903'000).has_value());  // normal in-series step
 
@@ -234,10 +234,10 @@ TEST_CASE_METHOD(ProgramClockFixture, "RecordPcr handles flagged discontinuities
 }
 
 // -------------------------------------------------------------------------------------------------
-// Unflagged discontinuity tests
+// Inferred discontinuity tests
 // -------------------------------------------------------------------------------------------------
 
-TEST_CASE_METHOD(ProgramClockFixture, "RecordPcr handles unflagged out-of-series PCRs") {
+TEST_CASE_METHOD(ProgramClockFixture, "RecordPcr infers discontinuities from out-of-series PCRs") {
     SetPcrPid();
 
     SECTION("a lone reverse PCR is only held as suspect") {
@@ -315,7 +315,7 @@ TEST_CASE_METHOD(ProgramClockFixture, "RecordPcr handles unflagged out-of-series
         CHECK(clock.PtsToUnixMs(900'000) == kWall);
     }
 
-    SECTION("unflagged re-sync is reported only after confirmation") {
+    SECTION("inferred discontinuity is reported only after confirmation") {
         AcceptPcr(900'000);
 
         CHECK_FALSE(RecordPcr(100).has_value());

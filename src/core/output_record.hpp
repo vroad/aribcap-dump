@@ -80,7 +80,8 @@ struct CaptionDecodeError {
 // PCR clock re-sync on `pid`.
 struct PcrDiscontinuity {
     std::uint16_t pid = 0;
-    // Distinguishes an expected discontinuity_indicator from an inferred (unflagged) jump.
+    // True for a discontinuity flagged by `discontinuity_indicator`; false for an inferred
+    // discontinuity.
     bool flagged = false;
 };
 

@@ -232,9 +232,8 @@ bool PacketFramer::EmitPacket(const std::uint8_t* data, const PacketHandler& on_
     // without copying.
     //
     // `ts::TSPacket` is a final class with a single `uint8_t b[PKT_SIZE]` member, no
-    // constructor, and alignment 1. TSDuck documents that arrays of this class share the
-    // physical layout of a transport stream, so this relies on that documented layout
-    // guarantee, not on alignment alone.
+    // constructor, and alignment 1. As a result, an array of `ts::TSPacket` occupies exactly
+    // the same bytes as a raw buffer, with no padding or vtable in between.
     //
     // No `TSPacket` object is constructed here; every mainstream compiler honors this as a
     // strict-aliasing exception, but the C++ standard itself does not guarantee it.

@@ -56,3 +56,4 @@ ADDITIONAL_EXCLUDED_DIRECTORIES:
   - .direnv
   - .rumdl_cache
   - build
+  - vendor

@@ -2,6 +2,10 @@
 
 #include "core/ts_utils.hpp"
 
+#include <chrono>
+#include <format>
+#include <string>
+
 #include "tscore/tsMemory.h"
 #include "tsduck/tsTS.h"
 
@@ -49,6 +53,18 @@ std::optional<std::int64_t> JstTimeToUnixMs(const ts::Time& time) {
     }
 
     return (utc - ts::Time::UnixEpoch).count();
+}
+
+std::string UnixMsToRfc3339Jst(std::int64_t unix_ms) {
+    // Add JST's fixed +9 h offset to the Unix-epoch timestamp, format the shifted
+    // date/time fields, then append the matching fixed JST offset.
+    //
+    // Formatting a sys_time keeps the conversion independent of the host timezone.
+    // Passing a sys_time<cn::milliseconds> to std::format makes %T print exactly
+    // 3 fractional digits.
+    const cn::sys_time<cn::milliseconds> jst_wall_clock{cn::milliseconds{unix_ms} + cn::hours{9}};
+
+    return std::format("{:%FT%T}", jst_wall_clock) + "+09:00";
 }
 
 }  // namespace aribcap_dump

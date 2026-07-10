@@ -58,3 +58,19 @@ TEST_CASE("ParsePesPts decodes a PTS encoded by TSDuck") {
     REQUIRE(decoded.has_value());
     CHECK(*decoded == pts);
 }
+
+// -------------------------------------------------------------------------------------------------
+// RFC 3339 timestamp formatting tests
+// -------------------------------------------------------------------------------------------------
+
+TEST_CASE("UnixMsToRfc3339Jst formats Unix ms as JST RFC 3339 strings") {
+    // Sub-second milliseconds are always printed with 3 digits.
+    CHECK(aribcap_dump::UnixMsToRfc3339Jst(1'577'804'400'123) == "2020-01-01T00:00:00.123+09:00");
+    // This case verifies that the offset is applied before the date is split out.
+    // 2019-12-31T20:00:00Z becomes 2020-01-01T05:00:00+09:00 after applying the
+    // JST offset.
+    CHECK(aribcap_dump::UnixMsToRfc3339Jst(1'577'822'400'000) == "2020-01-01T05:00:00.000+09:00");
+    // 1970-01-01T00:00:00Z becomes 1970-01-01T09:00:00+09:00 after applying the
+    // JST offset.
+    CHECK(aribcap_dump::UnixMsToRfc3339Jst(0) == "1970-01-01T09:00:00.000+09:00");
+}

@@ -2,11 +2,15 @@
 
 #include "core/output_record.hpp"
 
+#include <cstdint>
 #include <jsoncons/json.hpp>
+#include <optional>
 #include <string>
 #include <type_traits>
 #include <utility>
 #include <vector>
+
+#include "core/ts_utils.hpp"
 
 namespace aribcap_dump {
 namespace {
@@ -17,6 +21,17 @@ template <typename T>
 void AddOptional(Json* object, const std::string& key, const std::optional<T>& value) {
     if (value.has_value()) {
         (*object)[key] = *value;
+    } else {
+        (*object)[key] = jsoncons::null_type();
+    }
+}
+
+// Adds a Unix-ms timestamp from std::optional as an RFC 3339 JST string when it has
+// a value, or JSON null when it doesn't have one.
+void AddOptionalRfc3339(Json* object, const std::string& key,
+                        const std::optional<std::int64_t>& unix_ms) {
+    if (unix_ms.has_value()) {
+        (*object)[key] = UnixMsToRfc3339Jst(*unix_ms);
     } else {
         (*object)[key] = jsoncons::null_type();
     }
@@ -120,7 +135,7 @@ std::string ToJsonLine(const OutputRecord& record) {
 
             if constexpr (std::is_same_v<Value, CaptionRecord>) {
                 out["type"] = "caption";
-                AddOptional(&out, "timeMs", value.time_ms);
+                AddOptionalRfc3339(&out, "time", value.time_ms);
                 out["text"] = value.text;
                 out["ruby"] = RubyToJson(value.ruby);
                 AddOptional(&out, "color", value.color);
@@ -131,7 +146,7 @@ std::string ToJsonLine(const OutputRecord& record) {
                 out["clearScreen"] = value.clear_screen;
             } else if constexpr (std::is_same_v<Value, EitRecord>) {
                 out["type"] = "eit";
-                AddOptional(&out, "startTimeMs", value.start_time_ms);
+                AddOptionalRfc3339(&out, "startTime", value.start_time_ms);
                 AddOptional(&out, "durationSec", value.duration_sec);
                 out["shortEvents"] = ShortEventsToJson(value.short_events);
                 out["extendedText"] = value.extended_text;

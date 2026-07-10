@@ -19,7 +19,7 @@ TEST_CASE("caption serializes in JSONL shape") {
     };
     CHECK(
         aribcap_dump::ToJsonLine(record) ==
-        R"({"type":"caption","timeMs":1577804400000,"text":"caption","ruby":[],"color":null,"pid":2,"captionType":"caption","languageCode":"jpn","durationMs":5000,"clearScreen":true})");
+        R"({"type":"caption","time":"2020-01-01T00:00:00.000+09:00","text":"caption","ruby":[],"color":null,"pid":2,"captionType":"caption","languageCode":"jpn","durationMs":5000,"clearScreen":true})");
 }
 
 TEST_CASE("caption null time serializes as null") {
@@ -31,7 +31,7 @@ TEST_CASE("caption null time serializes as null") {
     };
     CHECK(
         aribcap_dump::ToJsonLine(record) ==
-        R"({"type":"caption","timeMs":null,"text":"caption","ruby":[],"color":null,"pid":2,"captionType":"caption","languageCode":"jpn","durationMs":null,"clearScreen":false})");
+        R"({"type":"caption","time":null,"text":"caption","ruby":[],"color":null,"pid":2,"captionType":"caption","languageCode":"jpn","durationMs":null,"clearScreen":false})");
 }
 
 TEST_CASE("caption color serializes as JSON string") {
@@ -44,7 +44,7 @@ TEST_CASE("caption color serializes as JSON string") {
     };
     CHECK(
         aribcap_dump::ToJsonLine(record) ==
-        R"({"type":"caption","timeMs":null,"text":"caption","ruby":[],"color":"0xffff00ff","pid":2,"captionType":"caption","languageCode":"jpn","durationMs":null,"clearScreen":false})");
+        R"({"type":"caption","time":null,"text":"caption","ruby":[],"color":"0xffff00ff","pid":2,"captionType":"caption","languageCode":"jpn","durationMs":null,"clearScreen":false})");
 }
 
 TEST_CASE("caption ruby serializes as string array") {
@@ -58,7 +58,7 @@ TEST_CASE("caption ruby serializes as string array") {
     };
     CHECK(
         aribcap_dump::ToJsonLine(record) ==
-        R"({"type":"caption","timeMs":null,"text":"明日は晴れです","ruby":["あした","は"],"color":"0xffffffff","pid":2,"captionType":"caption","languageCode":"jpn","durationMs":null,"clearScreen":false})");
+        R"({"type":"caption","time":null,"text":"明日は晴れです","ruby":["あした","は"],"color":"0xffffffff","pid":2,"captionType":"caption","languageCode":"jpn","durationMs":null,"clearScreen":false})");
 }
 
 TEST_CASE("caption type serializes superimpose") {
@@ -71,7 +71,7 @@ TEST_CASE("caption type serializes superimpose") {
     };
     CHECK(
         aribcap_dump::ToJsonLine(record) ==
-        R"({"type":"caption","timeMs":null,"text":"caption","ruby":[],"color":null,"pid":2,"captionType":"superimpose","languageCode":"jpn","durationMs":null,"clearScreen":false})");
+        R"({"type":"caption","time":null,"text":"caption","ruby":[],"color":null,"pid":2,"captionType":"superimpose","languageCode":"jpn","durationMs":null,"clearScreen":false})");
 }
 
 // -------------------------------------------------------------------------------------------------
@@ -103,11 +103,19 @@ TEST_CASE("EIT serializes unit-suffixed camelCase fields") {
     };
     CHECK(
         aribcap_dump::ToJsonLine(record) ==
-        R"({"type":"eit","startTimeMs":1577804400000,"durationSec":1800)"
+        R"({"type":"eit","startTime":"2020-01-01T00:00:00.000+09:00","durationSec":1800)"
         R"(,"shortEvents":[{"eventName":"name","text":"text","languageCode":"jpn"}])"
         R"(,"extendedText":"extended","version":5,"serviceId":18432,"transportStreamId":12345)"
         R"(,"originalNetworkId":32736,"eventId":10,"section":"following","genres":[)"
         R"({"contentNibbleLevel1":7,"contentNibbleLevel2":1,"userNibble1":15,"userNibble2":15}]})");
+}
+
+TEST_CASE("EIT null start time serializes as null") {
+    const aribcap_dump::OutputRecord record = aribcap_dump::EitRecord{};
+
+    CHECK(
+        aribcap_dump::ToJsonLine(record) ==
+        R"({"type":"eit","startTime":null,"durationSec":null,"shortEvents":[],"extendedText":"","version":0,"serviceId":0,"transportStreamId":0,"originalNetworkId":0,"eventId":0,"section":"present","genres":[]})");
 }
 
 // -------------------------------------------------------------------------------------------------

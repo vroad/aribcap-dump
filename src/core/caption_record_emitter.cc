@@ -28,8 +28,8 @@ constexpr std::size_t kFirstLanguageIndex = 0;
 constexpr std::size_t kSecondLanguageIndex = 1;
 
 struct CaptionMetadata {
-    std::optional<std::string> color;
     std::vector<std::string> ruby;
+    std::optional<std::string> color;
 };
 
 // Production implementation of `CaptionDecoder` that decodes through libaribcaption.
@@ -211,15 +211,15 @@ void CaptionRecordEmitter::HandlePes(const ts::PESPacket& packet) {
                                      : std::optional<std::int64_t>(result.caption->wait_duration);
 
         sink_.Emit(CaptionRecord{
+            .time_ms = time,
+            .text = std::move(text),
+            .ruby = std::move(metadata.ruby),
+            .color = std::move(metadata.color),
             .pid = static_cast<std::uint16_t>(pid),
             .caption_type = ToCaptionRecordType(info_.caption_type),
             .language_code = LanguageCodeToString(result.caption->iso6392_language_code),
-            .time_ms = time,
             .duration_ms = duration_ms,
             .clear_screen = (result.caption->flags & aribcaption::kCaptionFlagsClearScreen) != 0,
-            .color = std::move(metadata.color),
-            .text = std::move(text),
-            .ruby = std::move(metadata.ruby),
         });
     }
 }

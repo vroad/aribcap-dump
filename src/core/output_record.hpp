@@ -21,19 +21,19 @@ enum class CaptionRecordType {
 
 // One decoded ARIB caption line ready for JSONL output.
 struct CaptionRecord {
+    std::optional<std::int64_t> time_ms;
+    std::string text;
+    std::vector<std::string> ruby;
+    std::optional<std::string> color;
     std::uint16_t pid = 0;
     CaptionRecordType caption_type = CaptionRecordType::kCaption;
     std::optional<std::string> language_code;
-    std::optional<std::int64_t> time_ms;
     // Presentation duration in milliseconds; absent when the caption's end time is indefinite
     // (presented until the next caption's PTS).
     std::optional<std::int64_t> duration_ms;
     // Set when libaribcaption's `kCaptionFlagsClearScreen` flag is present, i.e. the screen
     // should be cleared before this caption is presented.
     bool clear_screen = false;
-    std::optional<std::string> color;
-    std::string text;
-    std::vector<std::string> ruby;
 };
 
 // -------------------------------------------------------------------------------------------------
@@ -45,11 +45,11 @@ enum class EitSection {
     kFollowing,
 };
 
-// Language, event name, and short description from one `short_event_descriptor`.
+// Event name, short description, and language from one `short_event_descriptor`.
 struct EitShortEvent {
-    std::string language_code;
     std::string event_name;
     std::string text;
+    std::string language_code;
 };
 
 // Raw nibble values from one ARIB STD-B10 Part 2, section 6.2.4 content_descriptor entry.
@@ -63,6 +63,10 @@ struct EitGenre {
 
 // One parsed EPG event (present or following section) ready for JSONL output.
 struct EitRecord {
+    std::optional<std::int64_t> start_time_ms;
+    std::optional<std::uint32_t> duration_sec;
+    std::vector<EitShortEvent> short_events;
+    std::string extended_text;
     // Version of the EIT (sub)table this event came from, letting consumers tell a revised
     // event record from a brand-new one.
     std::uint8_t version = 0;
@@ -75,10 +79,6 @@ struct EitRecord {
     // Each `content_descriptor` may contain multiple entries. Entries are ordered first by
     // descriptor position, then by entry position within that descriptor.
     std::vector<EitGenre> genres;
-    std::vector<EitShortEvent> short_events;
-    std::string extended_text;
-    std::optional<std::int64_t> start_time_ms;
-    std::optional<std::uint32_t> duration_sec;
 };
 
 // -------------------------------------------------------------------------------------------------

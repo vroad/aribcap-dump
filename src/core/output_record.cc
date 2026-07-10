@@ -52,9 +52,9 @@ void AddOptional(Json* object, const std::string& key, const std::optional<T>& v
 
     for (const auto& short_event : short_events) {
         Json value;
-        value["languageCode"] = short_event.language_code;
         value["eventName"] = short_event.event_name;
         value["text"] = short_event.text;
+        value["languageCode"] = short_event.language_code;
         out.push_back(std::move(value));
     }
 
@@ -120,17 +120,21 @@ std::string ToJsonLine(const OutputRecord& record) {
 
             if constexpr (std::is_same_v<Value, CaptionRecord>) {
                 out["type"] = "caption";
+                AddOptional(&out, "timeMs", value.time_ms);
+                out["text"] = value.text;
+                out["ruby"] = RubyToJson(value.ruby);
+                AddOptional(&out, "color", value.color);
                 out["pid"] = value.pid;
                 out["captionType"] = ToString(value.caption_type);
                 AddOptional(&out, "languageCode", value.language_code);
-                AddOptional(&out, "timeMs", value.time_ms);
                 AddOptional(&out, "durationMs", value.duration_ms);
                 out["clearScreen"] = value.clear_screen;
-                AddOptional(&out, "color", value.color);
-                out["text"] = value.text;
-                out["ruby"] = RubyToJson(value.ruby);
             } else if constexpr (std::is_same_v<Value, EitRecord>) {
                 out["type"] = "eit";
+                AddOptional(&out, "startTimeMs", value.start_time_ms);
+                AddOptional(&out, "durationSec", value.duration_sec);
+                out["shortEvents"] = ShortEventsToJson(value.short_events);
+                out["extendedText"] = value.extended_text;
                 out["version"] = value.version;
                 out["serviceId"] = value.service_id;
                 out["transportStreamId"] = value.transport_stream_id;
@@ -138,10 +142,6 @@ std::string ToJsonLine(const OutputRecord& record) {
                 out["eventId"] = value.event_id;
                 out["section"] = ToString(value.section);
                 out["genres"] = GenresToJson(value.genres);
-                out["shortEvents"] = ShortEventsToJson(value.short_events);
-                out["extendedText"] = value.extended_text;
-                AddOptional(&out, "startTimeMs", value.start_time_ms);
-                AddOptional(&out, "durationSec", value.duration_sec);
             } else if constexpr (std::is_same_v<Value, DiagnosticRecord>) {
                 out = DiagnosticToJson(value);
             }

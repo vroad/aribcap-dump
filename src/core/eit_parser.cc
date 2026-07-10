@@ -118,9 +118,9 @@ void PushParsedExtendedEventItem(std::vector<ParsedExtendedEventItem>* items,
 
         if (short_event.isValid()) {
             out.short_events.push_back(EitShortEvent{
-                .language_code = short_event.language_code.toUTF8(),
                 .event_name = short_event.event_name.toUTF8(),
                 .text = short_event.text.toUTF8(),
+                .language_code = short_event.language_code.toUTF8(),
             });
         }
     }
@@ -206,12 +206,6 @@ std::vector<EitRecord> ParseEit(ts::DuckContext& context, const DeserializedEit&
         }
 
         EitRecord parsed;
-        parsed.version = deserialized.version;
-        parsed.service_id = eit.service_id;
-        parsed.transport_stream_id = eit.ts_id;
-        parsed.original_network_id = eit.onetw_id;
-        parsed.section = GetSectionKind(results.size(), deserialized.present_section_has_event);
-        parsed.event_id = event.event_id;
         parsed.start_time_ms = JstTimeToUnixMs(event.start_time);
 
         if (event.duration.count() >= 0 &&
@@ -220,9 +214,15 @@ std::vector<EitRecord> ParseEit(ts::DuckContext& context, const DeserializedEit&
         }
 
         auto event_text = ParseDescriptors(context, event.descs);
-        parsed.genres = std::move(event_text.genres);
         parsed.short_events = std::move(event_text.short_events);
         parsed.extended_text = std::move(event_text.extended_text);
+        parsed.version = deserialized.version;
+        parsed.service_id = eit.service_id;
+        parsed.transport_stream_id = eit.ts_id;
+        parsed.original_network_id = eit.onetw_id;
+        parsed.section = GetSectionKind(results.size(), deserialized.present_section_has_event);
+        parsed.event_id = event.event_id;
+        parsed.genres = std::move(event_text.genres);
         results.push_back(std::move(parsed));
     }
 

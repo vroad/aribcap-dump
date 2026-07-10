@@ -10,68 +10,68 @@
 
 TEST_CASE("caption serializes in JSONL shape") {
     const aribcap_dump::OutputRecord record = aribcap_dump::CaptionRecord{
+        .time_ms = 1'577'804'400'000,
+        .text = "caption",
         .pid = 2,
         .language_code = "jpn",
-        .time_ms = 1'577'804'400'000,
         .duration_ms = 5'000,
         .clear_screen = true,
-        .text = "caption",
     };
     CHECK(
         aribcap_dump::ToJsonLine(record) ==
-        R"({"type":"caption","pid":2,"captionType":"caption","languageCode":"jpn","timeMs":1577804400000,"durationMs":5000,"clearScreen":true,"color":null,"text":"caption","ruby":[]})");
+        R"({"type":"caption","timeMs":1577804400000,"text":"caption","ruby":[],"color":null,"pid":2,"captionType":"caption","languageCode":"jpn","durationMs":5000,"clearScreen":true})");
 }
 
 TEST_CASE("caption null time serializes as null") {
     const aribcap_dump::OutputRecord record = aribcap_dump::CaptionRecord{
-        .pid = 2,
-        .language_code = "jpn",
         .time_ms = std::nullopt,
         .text = "caption",
+        .pid = 2,
+        .language_code = "jpn",
     };
     CHECK(
         aribcap_dump::ToJsonLine(record) ==
-        R"({"type":"caption","pid":2,"captionType":"caption","languageCode":"jpn","timeMs":null,"durationMs":null,"clearScreen":false,"color":null,"text":"caption","ruby":[]})");
+        R"({"type":"caption","timeMs":null,"text":"caption","ruby":[],"color":null,"pid":2,"captionType":"caption","languageCode":"jpn","durationMs":null,"clearScreen":false})");
 }
 
 TEST_CASE("caption color serializes as JSON string") {
     const aribcap_dump::OutputRecord record = aribcap_dump::CaptionRecord{
+        .time_ms = std::nullopt,
+        .text = "caption",
+        .color = "0xffff00ff",
         .pid = 2,
         .language_code = "jpn",
-        .time_ms = std::nullopt,
-        .color = "0xffff00ff",
-        .text = "caption",
     };
     CHECK(
         aribcap_dump::ToJsonLine(record) ==
-        R"({"type":"caption","pid":2,"captionType":"caption","languageCode":"jpn","timeMs":null,"durationMs":null,"clearScreen":false,"color":"0xffff00ff","text":"caption","ruby":[]})");
+        R"({"type":"caption","timeMs":null,"text":"caption","ruby":[],"color":"0xffff00ff","pid":2,"captionType":"caption","languageCode":"jpn","durationMs":null,"clearScreen":false})");
 }
 
 TEST_CASE("caption ruby serializes as string array") {
     const aribcap_dump::OutputRecord record = aribcap_dump::CaptionRecord{
-        .pid = 2,
-        .language_code = "jpn",
         .time_ms = std::nullopt,
-        .color = "0xffffffff",
         .text = "明日は晴れです",
         .ruby = {"あした", "は"},
+        .color = "0xffffffff",
+        .pid = 2,
+        .language_code = "jpn",
     };
     CHECK(
         aribcap_dump::ToJsonLine(record) ==
-        R"({"type":"caption","pid":2,"captionType":"caption","languageCode":"jpn","timeMs":null,"durationMs":null,"clearScreen":false,"color":"0xffffffff","text":"明日は晴れです","ruby":["あした","は"]})");
+        R"({"type":"caption","timeMs":null,"text":"明日は晴れです","ruby":["あした","は"],"color":"0xffffffff","pid":2,"captionType":"caption","languageCode":"jpn","durationMs":null,"clearScreen":false})");
 }
 
 TEST_CASE("caption type serializes superimpose") {
     const aribcap_dump::OutputRecord record = aribcap_dump::CaptionRecord{
+        .time_ms = std::nullopt,
+        .text = "caption",
         .pid = 2,
         .caption_type = aribcap_dump::CaptionRecordType::kSuperimpose,
         .language_code = "jpn",
-        .time_ms = std::nullopt,
-        .text = "caption",
     };
     CHECK(
         aribcap_dump::ToJsonLine(record) ==
-        R"({"type":"caption","pid":2,"captionType":"superimpose","languageCode":"jpn","timeMs":null,"durationMs":null,"clearScreen":false,"color":null,"text":"caption","ruby":[]})");
+        R"({"type":"caption","timeMs":null,"text":"caption","ruby":[],"color":null,"pid":2,"captionType":"superimpose","languageCode":"jpn","durationMs":null,"clearScreen":false})");
 }
 
 // -------------------------------------------------------------------------------------------------
@@ -80,6 +80,14 @@ TEST_CASE("caption type serializes superimpose") {
 
 TEST_CASE("EIT serializes unit-suffixed camelCase fields") {
     const aribcap_dump::OutputRecord record = aribcap_dump::EitRecord{
+        .start_time_ms = 1'577'804'400'000,
+        .duration_sec = 1800,
+        .short_events = {{
+            .event_name = "name",
+            .text = "text",
+            .language_code = "jpn",
+        }},
+        .extended_text = "extended",
         .version = 5,
         .service_id = 18432,
         .transport_stream_id = 12345,
@@ -92,21 +100,14 @@ TEST_CASE("EIT serializes unit-suffixed camelCase fields") {
             .user_nibble_1 = 15,
             .user_nibble_2 = 15,
         }},
-        .short_events = {{
-            "jpn",
-            "name",
-            "text",
-        }},
-        .extended_text = "extended",
-        .start_time_ms = 1'577'804'400'000,
-        .duration_sec = 1800,
     };
-    CHECK(aribcap_dump::ToJsonLine(record) ==
-          R"({"type":"eit","version":5,"serviceId":18432,"transportStreamId":12345)"
-          R"(,"originalNetworkId":32736,"eventId":10,"section":"following","genres":[)"
-          R"({"contentNibbleLevel1":7,"contentNibbleLevel2":1,"userNibble1":15,"userNibble2":15}])"
-          R"(,"shortEvents":[{"languageCode":"jpn","eventName":"name","text":"text"}])"
-          R"(,"extendedText":"extended","startTimeMs":1577804400000,"durationSec":1800})");
+    CHECK(
+        aribcap_dump::ToJsonLine(record) ==
+        R"({"type":"eit","startTimeMs":1577804400000,"durationSec":1800)"
+        R"(,"shortEvents":[{"eventName":"name","text":"text","languageCode":"jpn"}])"
+        R"(,"extendedText":"extended","version":5,"serviceId":18432,"transportStreamId":12345)"
+        R"(,"originalNetworkId":32736,"eventId":10,"section":"following","genres":[)"
+        R"({"contentNibbleLevel1":7,"contentNibbleLevel2":1,"userNibble1":15,"userNibble2":15}]})");
 }
 
 // -------------------------------------------------------------------------------------------------

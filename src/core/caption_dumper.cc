@@ -42,7 +42,7 @@ CaptionDumper::CaptionDumper(std::uint16_t target_sid, OutputRecordSink& sink,
       section_demux_(context_, this, nullptr, reserved_section_pids_),
       pes_demux_(context_, this, ts::NoPID()),
       program_clock_(),
-      eit_emitter_(sink) {
+      eit_emitter_(sink, options.eit_output) {
     context_.setDefaultCharsetIn(&ts::ARIBCharset::B24);
 }
 

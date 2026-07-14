@@ -13,7 +13,14 @@ namespace aribcap_dump {
 
 class OutputRecordSink;
 
-// Per-service EIT record emitter: emits one `EitRecord` per new EPG event in an EIT.
+enum class EitOutputMode {
+    kPresent,
+    kFollowing,
+    kPresentFollowing,
+};
+
+// Per-service EIT record emitter: emits one `EitRecord` per new EPG event in the EIT sections
+// selected by `output_mode`; events in unselected sections are suppressed.
 // For each `(section, event_id)`, it emits again only when the event's version differs from
 // the last-emitted version for that key.
 //
@@ -21,7 +28,8 @@ class OutputRecordSink;
 // service ID, and this class does not re-check.
 class EitRecordEmitter {
    public:
-    explicit EitRecordEmitter(OutputRecordSink& sink);
+    explicit EitRecordEmitter(OutputRecordSink& sink,
+                              EitOutputMode output_mode = EitOutputMode::kPresent);
 
     void HandleEit(ts::DuckContext& context, const DeserializedEit& deserialized);
 
@@ -35,6 +43,7 @@ class EitRecordEmitter {
     };
 
     OutputRecordSink& sink_;
+    EitOutputMode output_mode_;
     std::map<EitEventKey, std::uint8_t> last_emitted_version_;
 };
 

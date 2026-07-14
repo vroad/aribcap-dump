@@ -27,6 +27,7 @@ class CaptionDumperTestAccessor;
 
 struct CaptionDumperOptions {
     bool emit_empty_captions = false;
+    EitOutputMode eit_output = EitOutputMode::kPresent;
 };
 
 // Per-service coordinator that drives TSDuck demuxers over an MPEG-TS packet

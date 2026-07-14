@@ -87,12 +87,24 @@ class ScopedFd {
 
 int main(int argc, char** argv) {
     CLI::App app{"Collect and decode ARIB captions and EIT as JSONL"};
+
     std::uint16_t sid = 0;
     std::string file;
     bool emit_empty_captions = false;
+    aribcap_dump::EitOutputMode eit_output = aribcap_dump::EitOutputMode::kPresent;
+    const CLI::TransformPairs<aribcap_dump::EitOutputMode> eit_output_modes{
+        {"p", aribcap_dump::EitOutputMode::kPresent},
+        {"f", aribcap_dump::EitOutputMode::kFollowing},
+        {"pf", aribcap_dump::EitOutputMode::kPresentFollowing},
+    };
+
     app.add_option("--sid", sid, "Service id to collect")->required()->check(CLI::Range(1, 65535));
     app.add_flag("--emit-empty-captions", emit_empty_captions,
                  "Emit caption records even when decoded text is empty");
+    app.add_option("--eit", eit_output,
+                   "EIT sections to emit: p (present), f (following), or pf (both)")
+        ->transform(CLI::CheckedTransformer(eit_output_modes))
+        ->default_str("p");
     app.add_option("file", file, "Path to a TS file. Reads from stdin when omitted");
 
     try {
@@ -104,5 +116,6 @@ int main(int argc, char** argv) {
     return Run(sid, file,
                aribcap_dump::CaptionDumperOptions{
                    .emit_empty_captions = emit_empty_captions,
+                   .eit_output = eit_output,
                });
 }

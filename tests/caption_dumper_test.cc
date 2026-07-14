@@ -451,22 +451,17 @@ TEST_CASE_METHOD(CaptionDumperFixture,
     FeedEit(MakePfEit(kSid, 0));
 
     const auto& records = sink.Records();
-    REQUIRE_FALSE(records.empty());
+    REQUIRE(records.size() == 1);
     CHECK(std::holds_alternative<aribcap_dump::EitRecord>(records.front()));
+    CHECK(std::get<aribcap_dump::EitRecord>(records.front()).section ==
+          aribcap_dump::EitSection::kPresent);
 }
 
 TEST_CASE_METHOD(CaptionDumperFixture,
-                 "CaptionDumper labels the only event as following when the present section "
-                 "is empty") {
+                 "CaptionDumper does not emit following when the present section is empty") {
     FeedEitTable(MakePfEitWithEmptyPresentSection(context, kSid, 0x1235, 0));
 
-    const auto& records = sink.Records();
-    REQUIRE(records.size() == 1);
-    REQUIRE(std::holds_alternative<aribcap_dump::EitRecord>(records.front()));
-
-    const auto& eit = std::get<aribcap_dump::EitRecord>(records.front());
-    CHECK(eit.event_id == 0x1235);
-    CHECK(eit.section == aribcap_dump::EitSection::kFollowing);
+    CHECK(sink.Records().empty());
 }
 
 // -------------------------------------------------------------------------------------------------

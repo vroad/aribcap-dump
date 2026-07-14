@@ -3,7 +3,9 @@
 #include "core/eit_record_emitter.hpp"
 
 #include <cstdint>
+#include <tuple>
 #include <variant>
+#include <vector>
 
 #include "core/output_record.hpp"
 #include "core/output_record_sink.hpp"
@@ -13,6 +15,8 @@
 #include "tsduck/tsEIT.h"
 
 #include <catch2/catch_test_macros.hpp>
+#include <catch2/generators/catch_generators.hpp>
+#include <catch2/generators/catch_generators_adapters.hpp>
 
 namespace {
 
@@ -41,6 +45,41 @@ struct EitRecordEmitterFixture {
 };
 
 }  // namespace
+
+TEST_CASE("EitRecordEmitter filters events by output mode") {
+    ts::DuckContext context;
+    aribcap_dump::VectorOutputRecordSink sink;
+    using TestCase = std::tuple<aribcap_dump::EitOutputMode, std::vector<aribcap_dump::EitSection>>;
+    const auto [output_mode, expected_sections] =
+        GENERATE(table<aribcap_dump::EitOutputMode, std::vector<aribcap_dump::EitSection>>({
+            TestCase{aribcap_dump::EitOutputMode::kPresent, {aribcap_dump::EitSection::kPresent}},
+            TestCase{aribcap_dump::EitOutputMode::kFollowing,
+                     {aribcap_dump::EitSection::kFollowing}},
+            TestCase{aribcap_dump::EitOutputMode::kPresentFollowing,
+                     {aribcap_dump::EitSection::kPresent, aribcap_dump::EitSection::kFollowing}},
+        }));
+    aribcap_dump::EitRecordEmitter emitter(sink, output_mode);
+    auto eit = MakePfEit(1024, 0);
+
+    for (std::uint16_t event_id : {0x1234, 0x1235}) {
+        auto& event = eit.events.newEntry();
+        event.event_id = event_id;
+        event.start_time = ts::Time(2020, 1, 1, 0, 0, 0);
+        event.duration = cn::seconds(60);
+    }
+
+    emitter.HandleEit(context, aribcap_dump::DeserializedEit{
+                                   .eit = eit,
+                                   .version = 0,
+                                   .present_section_has_event = true,
+                               });
+
+    REQUIRE(sink.Records().size() == expected_sections.size());
+
+    for (std::size_t i = 0; i < expected_sections.size(); ++i) {
+        CHECK(std::get<aribcap_dump::EitRecord>(sink.Records()[i]).section == expected_sections[i]);
+    }
+}
 
 TEST_CASE_METHOD(EitRecordEmitterFixture, "EitRecordEmitter emits the first EPG event it sees") {
     Feed(1024, 0x1234, /*version=*/0);

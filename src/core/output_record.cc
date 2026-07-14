@@ -150,13 +150,13 @@ std::string ToJsonLine(const OutputRecord& record) {
                 AddOptional(&out, "durationSec", value.duration_sec);
                 out["shortEvents"] = ShortEventsToJson(value.short_events);
                 out["extendedText"] = value.extended_text;
+                out["genres"] = GenresToJson(value.genres);
+                out["section"] = ToString(value.section);
                 out["version"] = value.version;
                 out["serviceId"] = value.service_id;
                 out["transportStreamId"] = value.transport_stream_id;
                 out["originalNetworkId"] = value.original_network_id;
                 out["eventId"] = value.event_id;
-                out["section"] = ToString(value.section);
-                out["genres"] = GenresToJson(value.genres);
             } else if constexpr (std::is_same_v<Value, DiagnosticRecord>) {
                 out = DiagnosticToJson(value);
             }

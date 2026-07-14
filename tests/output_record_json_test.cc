@@ -88,26 +88,26 @@ TEST_CASE("EIT serializes unit-suffixed camelCase fields") {
             .language_code = "jpn",
         }},
         .extended_text = "extended",
-        .version = 5,
-        .service_id = 18432,
-        .transport_stream_id = 12345,
-        .original_network_id = 32736,
-        .event_id = 10,
-        .section = aribcap_dump::EitSection::kFollowing,
         .genres = {{
             .content_nibble_level_1 = 7,
             .content_nibble_level_2 = 1,
             .user_nibble_1 = 15,
             .user_nibble_2 = 15,
         }},
+        .section = aribcap_dump::EitSection::kFollowing,
+        .version = 5,
+        .service_id = 18432,
+        .transport_stream_id = 12345,
+        .original_network_id = 32736,
+        .event_id = 10,
     };
-    CHECK(
-        aribcap_dump::ToJsonLine(record) ==
-        R"({"type":"eit","startTime":"2020-01-01T00:00:00.000+09:00","durationSec":1800)"
-        R"(,"shortEvents":[{"eventName":"name","text":"text","languageCode":"jpn"}])"
-        R"(,"extendedText":"extended","version":5,"serviceId":18432,"transportStreamId":12345)"
-        R"(,"originalNetworkId":32736,"eventId":10,"section":"following","genres":[)"
-        R"({"contentNibbleLevel1":7,"contentNibbleLevel2":1,"userNibble1":15,"userNibble2":15}]})");
+    CHECK(aribcap_dump::ToJsonLine(record) ==
+          R"({"type":"eit","startTime":"2020-01-01T00:00:00.000+09:00","durationSec":1800)"
+          R"(,"shortEvents":[{"eventName":"name","text":"text","languageCode":"jpn"}])"
+          R"(,"extendedText":"extended","genres":[)"
+          R"({"contentNibbleLevel1":7,"contentNibbleLevel2":1,"userNibble1":15,"userNibble2":15}])"
+          R"(,"section":"following","version":5,"serviceId":18432,"transportStreamId":12345)"
+          R"(,"originalNetworkId":32736,"eventId":10})");
 }
 
 TEST_CASE("EIT null start time serializes as null") {
@@ -115,7 +115,7 @@ TEST_CASE("EIT null start time serializes as null") {
 
     CHECK(
         aribcap_dump::ToJsonLine(record) ==
-        R"({"type":"eit","startTime":null,"durationSec":null,"shortEvents":[],"extendedText":"","version":0,"serviceId":0,"transportStreamId":0,"originalNetworkId":0,"eventId":0,"section":"present","genres":[]})");
+        R"({"type":"eit","startTime":null,"durationSec":null,"shortEvents":[],"extendedText":"","genres":[],"section":"present","version":0,"serviceId":0,"transportStreamId":0,"originalNetworkId":0,"eventId":0})");
 }
 
 // -------------------------------------------------------------------------------------------------

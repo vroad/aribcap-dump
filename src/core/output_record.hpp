@@ -67,6 +67,11 @@ struct EitRecord {
     std::optional<std::uint32_t> duration_sec;
     std::vector<EitShortEvent> short_events;
     std::string extended_text;
+    // Genre nibbles collected from all `content_descriptor` descriptors in the EIT event.
+    // Each `content_descriptor` may contain multiple entries. Entries are ordered first by
+    // descriptor position, then by entry position within that descriptor.
+    std::vector<EitGenre> genres;
+    EitSection section = EitSection::kPresent;
     // Version of the EIT (sub)table this event came from, letting consumers tell a revised
     // event record from a brand-new one.
     std::uint8_t version = 0;
@@ -74,11 +79,6 @@ struct EitRecord {
     std::uint16_t transport_stream_id = 0;
     std::uint16_t original_network_id = 0;
     std::uint16_t event_id = 0;
-    EitSection section = EitSection::kPresent;
-    // Genre nibbles collected from all `content_descriptor` descriptors in the EIT event.
-    // Each `content_descriptor` may contain multiple entries. Entries are ordered first by
-    // descriptor position, then by entry position within that descriptor.
-    std::vector<EitGenre> genres;
 };
 
 // -------------------------------------------------------------------------------------------------

@@ -56,7 +56,20 @@ void CaptionDumper::FeedPacket(const ts::TSPacket& packet) {
     }
 
     section_demux_.feedPacket(packet);
-    pes_demux_.feedPacket(packet);
+
+    // Restrict `feedPacket` to registered caption PIDs to avoid growing `PESDemux`'s internal
+    // PAT/PMT demux state.
+    //
+    // `PESDemux` feeds every packet it receives into its internal `SectionDemux` regardless of
+    // the PES PID filter. It adds every PMT PID found in PAT's but does not remove PMT PID's
+    // that later PAT's no longer list. `PESDemux` uses that `SectionDemux` to discover stream types
+    // and codecs for PES PIDs.
+    //
+    // `CaptionDumper` consumes neither that metadata nor the content-analysis callbacks, so we only
+    // need to call `PESDemux::feedPacket()` for registered caption PIDs, not PAT/PMT PIDs.
+    if (pes_demux_.hasPID(packet.getPID())) {
+        pes_demux_.feedPacket(packet);
+    }
 }
 
 void CaptionDumper::Flush() {

@@ -219,7 +219,6 @@ void CaptionRecordEmitter::HandlePes(const ts::PESPacket& packet) {
             .caption_type = ToCaptionRecordType(info_.caption_type),
             .language_code = LanguageCodeToString(result.caption->iso6392_language_code),
             .duration_ms = duration_ms,
-            .clear_screen = (result.caption->flags & aribcaption::kCaptionFlagsClearScreen) != 0,
         });
     }
 }

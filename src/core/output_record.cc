@@ -143,7 +143,6 @@ std::string ToJsonLine(const OutputRecord& record) {
                 out["captionType"] = ToString(value.caption_type);
                 AddOptional(&out, "languageCode", value.language_code);
                 AddOptional(&out, "durationMs", value.duration_ms);
-                out["clearScreen"] = value.clear_screen;
             } else if constexpr (std::is_same_v<Value, EitRecord>) {
                 out["type"] = "eit";
                 AddOptionalRfc3339(&out, "startTime", value.start_time_ms);

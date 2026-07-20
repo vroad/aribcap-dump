@@ -31,9 +31,6 @@ struct CaptionRecord {
     // Presentation duration in milliseconds; absent when the caption's end time is indefinite
     // (presented until the next caption's PTS).
     std::optional<std::int64_t> duration_ms;
-    // Set when libaribcaption's `kCaptionFlagsClearScreen` flag is present, i.e. the screen
-    // should be cleared before this caption is presented.
-    bool clear_screen = false;
 };
 
 // -------------------------------------------------------------------------------------------------

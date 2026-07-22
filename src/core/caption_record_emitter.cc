@@ -206,10 +206,6 @@ void CaptionRecordEmitter::HandlePes(const ts::PESPacket& packet) {
             continue;
         }
 
-        const auto duration_ms = result.caption->wait_duration == aribcaption::DURATION_INDEFINITE
-                                     ? std::nullopt
-                                     : std::optional<std::int64_t>(result.caption->wait_duration);
-
         sink_.Emit(CaptionRecord{
             .time_ms = time,
             .text = std::move(text),
@@ -218,7 +214,6 @@ void CaptionRecordEmitter::HandlePes(const ts::PESPacket& packet) {
             .pid = static_cast<std::uint16_t>(pid),
             .caption_type = ToCaptionRecordType(info_.caption_type),
             .language_code = LanguageCodeToString(result.caption->iso6392_language_code),
-            .duration_ms = duration_ms,
         });
     }
 }

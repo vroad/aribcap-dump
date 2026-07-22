@@ -28,9 +28,6 @@ struct CaptionRecord {
     std::uint16_t pid = 0;
     CaptionRecordType caption_type = CaptionRecordType::kCaption;
     std::optional<std::string> language_code;
-    // Presentation duration in milliseconds; absent when the caption's end time is indefinite
-    // (presented until the next caption's PTS).
-    std::optional<std::int64_t> duration_ms;
 };
 
 // -------------------------------------------------------------------------------------------------

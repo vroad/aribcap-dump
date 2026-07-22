@@ -14,11 +14,10 @@ TEST_CASE("caption serializes in JSONL shape") {
         .text = "caption",
         .pid = 2,
         .language_code = "jpn",
-        .duration_ms = 5'000,
     };
     CHECK(
         aribcap_dump::ToJsonLine(record) ==
-        R"({"type":"caption","time":"2020-01-01T00:00:00.000+09:00","text":"caption","ruby":[],"color":null,"pid":2,"captionType":"caption","languageCode":"jpn","durationMs":5000})");
+        R"({"type":"caption","time":"2020-01-01T00:00:00.000+09:00","text":"caption","ruby":[],"color":null,"pid":2,"captionType":"caption","languageCode":"jpn"})");
 }
 
 TEST_CASE("caption null time serializes as null") {
@@ -30,7 +29,7 @@ TEST_CASE("caption null time serializes as null") {
     };
     CHECK(
         aribcap_dump::ToJsonLine(record) ==
-        R"({"type":"caption","time":null,"text":"caption","ruby":[],"color":null,"pid":2,"captionType":"caption","languageCode":"jpn","durationMs":null})");
+        R"({"type":"caption","time":null,"text":"caption","ruby":[],"color":null,"pid":2,"captionType":"caption","languageCode":"jpn"})");
 }
 
 TEST_CASE("caption color serializes as JSON string") {
@@ -43,7 +42,7 @@ TEST_CASE("caption color serializes as JSON string") {
     };
     CHECK(
         aribcap_dump::ToJsonLine(record) ==
-        R"({"type":"caption","time":null,"text":"caption","ruby":[],"color":"0xffff00ff","pid":2,"captionType":"caption","languageCode":"jpn","durationMs":null})");
+        R"({"type":"caption","time":null,"text":"caption","ruby":[],"color":"0xffff00ff","pid":2,"captionType":"caption","languageCode":"jpn"})");
 }
 
 TEST_CASE("caption ruby serializes as string array") {
@@ -57,7 +56,7 @@ TEST_CASE("caption ruby serializes as string array") {
     };
     CHECK(
         aribcap_dump::ToJsonLine(record) ==
-        R"({"type":"caption","time":null,"text":"明日は晴れです","ruby":["あした","は"],"color":"0xffffffff","pid":2,"captionType":"caption","languageCode":"jpn","durationMs":null})");
+        R"({"type":"caption","time":null,"text":"明日は晴れです","ruby":["あした","は"],"color":"0xffffffff","pid":2,"captionType":"caption","languageCode":"jpn"})");
 }
 
 TEST_CASE("caption type serializes superimpose") {
@@ -70,7 +69,7 @@ TEST_CASE("caption type serializes superimpose") {
     };
     CHECK(
         aribcap_dump::ToJsonLine(record) ==
-        R"({"type":"caption","time":null,"text":"caption","ruby":[],"color":null,"pid":2,"captionType":"superimpose","languageCode":"jpn","durationMs":null})");
+        R"({"type":"caption","time":null,"text":"caption","ruby":[],"color":null,"pid":2,"captionType":"superimpose","languageCode":"jpn"})");
 }
 
 // -------------------------------------------------------------------------------------------------

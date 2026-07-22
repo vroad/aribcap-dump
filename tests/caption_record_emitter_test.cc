@@ -38,7 +38,6 @@ class FakeCaptionDecoder final : public aribcap_dump::CaptionDecoder {
     aribcaption::DecodeStatus status = aribcaption::DecodeStatus::kGotCaption;
     std::string text = "caption";
     std::uint32_t iso6392_language_code = MakeLanguageCode('j', 'p', 'n');
-    std::int64_t wait_duration = aribcaption::DURATION_INDEFINITE;
     std::uint32_t second_language_code = 0;
     std::vector<aribcaption::CaptionRegion> regions;
     std::vector<std::uint8_t> last_payload;
@@ -56,7 +55,6 @@ class FakeCaptionDecoder final : public aribcap_dump::CaptionDecoder {
             result.caption = std::make_unique<aribcaption::Caption>();
             result.caption->text = text;
             result.caption->iso6392_language_code = iso6392_language_code;
-            result.caption->wait_duration = wait_duration;
             result.caption->regions = regions;
         }
 
@@ -186,25 +184,9 @@ TEST_CASE_METHOD(CaptionRecordEmitterFixture,
     CHECK(*caption->language_code == "jpn");
     REQUIRE(caption->time_ms.has_value());
     CHECK(*caption->time_ms == kWallBase + 1'000);
-    CHECK_FALSE(caption->duration_ms.has_value());
     CHECK_FALSE(caption->color.has_value());
     CHECK(caption->ruby.empty());
     CHECK(caption->text == "\n caption text \t");
-}
-
-TEST_CASE_METHOD(CaptionRecordEmitterFixture,
-                 "CaptionRecordEmitter passes through a definite caption duration") {
-    CreateEmitter();
-    fake_decoder->wait_duration = 5'000;
-
-    HandlePes({0x80, 0xFF, 0x42}, 990'000);
-
-    const auto& records = Records();
-    REQUIRE(records.size() == 1);
-    const auto* caption = std::get_if<aribcap_dump::CaptionRecord>(&records[0]);
-    REQUIRE(caption != nullptr);
-    REQUIRE(caption->duration_ms.has_value());
-    CHECK(*caption->duration_ms == 5'000);
 }
 
 TEST_CASE_METHOD(CaptionRecordEmitterFixture,
@@ -373,7 +355,6 @@ TEST_CASE_METHOD(CaptionRecordEmitterFixture,
                  "CaptionRecordEmitter can emit captions with empty text") {
     CreateEmitter(aribcap_dump::CaptionRecordEmitterOptions{.emit_empty_captions = true});
     fake_decoder->text = "";
-    fake_decoder->wait_duration = 250;
 
     HandlePes({0x01, 0x02});
 
@@ -382,8 +363,6 @@ TEST_CASE_METHOD(CaptionRecordEmitterFixture,
     const auto* caption = std::get_if<aribcap_dump::CaptionRecord>(&records[0]);
     REQUIRE(caption != nullptr);
     CHECK(caption->text.empty());
-    REQUIRE(caption->duration_ms.has_value());
-    CHECK(*caption->duration_ms == 250);
 }
 
 TEST_CASE_METHOD(CaptionRecordEmitterFixture,

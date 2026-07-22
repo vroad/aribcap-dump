@@ -25,7 +25,6 @@ struct CaptionRecord {
     std::string text;
     std::vector<std::string> ruby;
     std::optional<std::string> color;
-    std::uint16_t pid = 0;
     CaptionRecordType caption_type = CaptionRecordType::kCaption;
     std::optional<std::string> language_code;
 };

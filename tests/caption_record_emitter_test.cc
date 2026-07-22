@@ -178,7 +178,6 @@ TEST_CASE_METHOD(CaptionRecordEmitterFixture,
     REQUIRE(records.size() == 1);
     const auto* caption = std::get_if<aribcap_dump::CaptionRecord>(&records[0]);
     REQUIRE(caption != nullptr);
-    CHECK(caption->pid == kCaptionPid);
     CHECK(caption->caption_type == aribcap_dump::CaptionRecordType::kCaption);
     REQUIRE(caption->language_code.has_value());
     CHECK(*caption->language_code == "jpn");

@@ -211,7 +211,6 @@ void CaptionRecordEmitter::HandlePes(const ts::PESPacket& packet) {
             .text = std::move(text),
             .ruby = std::move(metadata.ruby),
             .color = std::move(metadata.color),
-            .pid = static_cast<std::uint16_t>(pid),
             .caption_type = ToCaptionRecordType(info_.caption_type),
             .language_code = LanguageCodeToString(result.caption->iso6392_language_code),
         });

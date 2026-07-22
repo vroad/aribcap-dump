@@ -139,7 +139,6 @@ std::string ToJsonLine(const OutputRecord& record) {
                 out["text"] = value.text;
                 out["ruby"] = RubyToJson(value.ruby);
                 AddOptional(&out, "color", value.color);
-                out["pid"] = value.pid;
                 out["captionType"] = ToString(value.caption_type);
                 AddOptional(&out, "languageCode", value.language_code);
             } else if constexpr (std::is_same_v<Value, EitRecord>) {

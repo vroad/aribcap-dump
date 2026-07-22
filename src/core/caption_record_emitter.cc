@@ -35,10 +35,10 @@ struct CaptionMetadata {
 // Production implementation of `CaptionDecoder` that decodes through libaribcaption.
 class AribCaptionDecoder final : public CaptionDecoder {
    public:
-    AribCaptionDecoder(const CaptionStreamInfo& info, aribcaption::LanguageId language_id)
+    AribCaptionDecoder(aribcaption::Profile profile, aribcaption::LanguageId language_id)
         : decoder_(arib_context_) {
         (void)decoder_.Initialize(aribcaption::EncodingScheme::kARIB_STD_B24_JIS,
-                                  aribcaption::CaptionType::kCaption, info.profile, language_id);
+                                  aribcaption::CaptionType::kCaption, profile, language_id);
     }
 
     [[nodiscard]] aribcaption::DecodeStatus Decode(const std::uint8_t* data, std::size_t size,
@@ -57,9 +57,9 @@ class AribCaptionDecoder final : public CaptionDecoder {
     aribcaption::Decoder decoder_;
 };
 
-[[nodiscard]] CaptionDecoderFactory MakeAribCaptionDecoderFactory(CaptionStreamInfo info) {
-    return [info](aribcaption::LanguageId language_id) {
-        return std::make_unique<AribCaptionDecoder>(info, language_id);
+[[nodiscard]] CaptionDecoderFactory MakeAribCaptionDecoderFactory(aribcaption::Profile profile) {
+    return [profile](aribcaption::LanguageId language_id) {
+        return std::make_unique<AribCaptionDecoder>(profile, language_id);
     };
 }
 
@@ -128,17 +128,17 @@ class AribCaptionDecoder final : public CaptionDecoder {
 }  // namespace
 
 CaptionRecordEmitter::CaptionRecordEmitter(OutputRecordSink& sink, const ProgramClock& clock,
-                                           CaptionStreamInfo info,
+                                           aribcaption::Profile profile,
                                            CaptionRecordEmitterOptions options)
-    : CaptionRecordEmitter(sink, clock, info, MakeAribCaptionDecoderFactory(info), options) {}
+    : CaptionRecordEmitter(sink, clock, profile, MakeAribCaptionDecoderFactory(profile), options) {}
 
 CaptionRecordEmitter::CaptionRecordEmitter(OutputRecordSink& sink, const ProgramClock& clock,
-                                           CaptionStreamInfo info,
+                                           aribcaption::Profile profile,
                                            CaptionDecoderFactory decoder_factory,
                                            CaptionRecordEmitterOptions options)
     : sink_(sink),
       clock_(clock),
-      info_(info),
+      profile_(profile),
       options_(options),
       decoders_(),
       decoder_factory_(std::move(decoder_factory)) {

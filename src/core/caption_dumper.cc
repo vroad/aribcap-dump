@@ -192,13 +192,13 @@ void CaptionDumper::HandleEit(const ts::BinaryTable& table) {
 }
 
 void CaptionDumper::SyncCaptionStreams(ts::PID pmt_pid, const ts::PMT::StreamMap& streams) {
-    std::map<ts::PID, CaptionStreamInfo> desired;
+    std::map<ts::PID, aribcaption::Profile> desired;
 
     for (const auto& [es_pid, stream] : streams) {
-        auto caption = ClassifyCaptionStream(context_, pmt_pid, stream);
+        auto profile = ClassifyCaptionStream(context_, pmt_pid, stream);
 
-        if (caption.has_value()) {
-            desired.emplace(es_pid, *caption);
+        if (profile.has_value()) {
+            desired.emplace(es_pid, *profile);
         }
     }
 
@@ -213,24 +213,24 @@ void CaptionDumper::SyncCaptionStreams(ts::PID pmt_pid, const ts::PMT::StreamMap
         ++current;
     }
 
-    for (const auto& [pid, info] : desired) {
+    for (const auto& [pid, profile] : desired) {
         auto current = caption_emitters_.find(pid);
 
         if (current == caption_emitters_.end()) {
-            RegisterCaptionStream(pid, info);
+            RegisterCaptionStream(pid, profile);
             continue;
         }
 
-        if (current->second.Info() != info) {
+        if (current->second.Profile() != profile) {
             UnregisterCaptionStream(pid);
-            RegisterCaptionStream(pid, info);
+            RegisterCaptionStream(pid, profile);
         }
     }
 }
 
-void CaptionDumper::RegisterCaptionStream(ts::PID pid, CaptionStreamInfo info) {
+void CaptionDumper::RegisterCaptionStream(ts::PID pid, aribcaption::Profile profile) {
     caption_emitters_.try_emplace(
-        pid, sink_, program_clock_, info,
+        pid, sink_, program_clock_, profile,
         CaptionRecordEmitterOptions{.emit_empty_captions = options_.emit_empty_captions});
 
     pes_demux_.addPID(pid);

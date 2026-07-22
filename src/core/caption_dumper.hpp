@@ -6,7 +6,6 @@
 #include <map>
 #include <optional>
 
-#include "core/caption_classifier.hpp"
 #include "core/caption_record_emitter.hpp"
 #include "core/eit_record_emitter.hpp"
 #include "core/program_clock.hpp"
@@ -67,7 +66,7 @@ class CaptionDumper final : private ts::TableHandlerInterface, private ts::PESHa
     // that disappeared or changed.
     void SyncCaptionStreams(ts::PID pmt_pid, const ts::PMT::StreamMap& streams);
     // Creates a caption emitter for `pid` and starts demuxing its PES packets.
-    void RegisterCaptionStream(ts::PID pid, CaptionStreamInfo info);
+    void RegisterCaptionStream(ts::PID pid, aribcaption::Profile profile);
     // Stops demuxing `pid`'s PES packets and destroys its caption emitter.
     void UnregisterCaptionStream(ts::PID pid);
     // Tears down all state tied to the target service's current PMT PID,

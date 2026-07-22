@@ -9,7 +9,6 @@
 #include <memory>
 
 #include "aribcaption/decoder.hpp"
-#include "core/caption_classifier.hpp"
 
 namespace ts {
 class PESPacket;
@@ -45,14 +44,14 @@ struct CaptionRecordEmitterOptions {
 // language, it creates the second-language decoder and feeds both languages from then on.
 class CaptionRecordEmitter {
    public:
-    CaptionRecordEmitter(OutputRecordSink& sink, const ProgramClock& clock, CaptionStreamInfo info,
-                         CaptionRecordEmitterOptions options = {});
-    CaptionRecordEmitter(OutputRecordSink& sink, const ProgramClock& clock, CaptionStreamInfo info,
-                         CaptionDecoderFactory decoder_factory,
+    CaptionRecordEmitter(OutputRecordSink& sink, const ProgramClock& clock,
+                         aribcaption::Profile profile, CaptionRecordEmitterOptions options = {});
+    CaptionRecordEmitter(OutputRecordSink& sink, const ProgramClock& clock,
+                         aribcaption::Profile profile, CaptionDecoderFactory decoder_factory,
                          CaptionRecordEmitterOptions options = {});
 
-    [[nodiscard]] const CaptionStreamInfo& Info() const {
-        return info_;
+    [[nodiscard]] aribcaption::Profile Profile() const {
+        return profile_;
     }
     void HandlePes(const ts::PESPacket& packet);
 
@@ -61,7 +60,7 @@ class CaptionRecordEmitter {
 
     OutputRecordSink& sink_;
     const ProgramClock& clock_;
-    CaptionStreamInfo info_;
+    aribcaption::Profile profile_;
     CaptionRecordEmitterOptions options_;
     CaptionDecoderList decoders_;
     CaptionDecoderFactory decoder_factory_;

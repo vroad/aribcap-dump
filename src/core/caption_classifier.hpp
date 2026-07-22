@@ -45,20 +45,12 @@ inline constexpr std::uint16_t kDataComponentProfileC = 0x0012;
 inline constexpr ts::PID kOneSegPmtPidMin = 0x1FC8;
 inline constexpr ts::PID kOneSegPmtPidMax = 0x1FCF;
 
-// Profile used by libaribcaption to decode one ARIB caption stream.
-struct CaptionStreamInfo {
-    aribcaption::Profile profile;
-
-    [[nodiscard]] bool operator==(const CaptionStreamInfo&) const = default;
-};
-
 // Classifies a PMT stream entry as a supported ARIB caption stream, using the PMT PID
 // and stream descriptors.
 //
-// Returns the libaribcaption profile, or std::nullopt when the stream is not a
-// supported ARIB caption stream.
-[[nodiscard]] std::optional<CaptionStreamInfo> ClassifyCaptionStream(ts::DuckContext& context,
-                                                                     ts::PID pmt_pid,
-                                                                     const ts::PMT::Stream& stream);
+// Returns the libaribcaption profile to decode it with, or std::nullopt when the
+// stream is not a supported ARIB caption stream.
+[[nodiscard]] std::optional<aribcaption::Profile> ClassifyCaptionStream(
+    ts::DuckContext& context, ts::PID pmt_pid, const ts::PMT::Stream& stream);
 
 }  // namespace aribcap_dump

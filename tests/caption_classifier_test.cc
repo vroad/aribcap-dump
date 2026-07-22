@@ -46,7 +46,7 @@ class CaptionClassifierFixture {
         const auto result = aribcap_dump::ClassifyCaptionStream(context, pmt_pid, stream);
         REQUIRE(result.has_value());
 
-        CHECK(result->profile == expected_profile);
+        CHECK(*result == expected_profile);
     }
 
     void CheckRejected(const ts::PMT::Stream& stream, ts::PID pmt_pid) {

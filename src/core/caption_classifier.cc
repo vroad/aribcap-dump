@@ -24,7 +24,7 @@ namespace {
 
 // Applies the ARIB caption-pairing rules to an already-extracted
 // component_tag/data_component_id/PMT-PID triple.
-[[nodiscard]] std::optional<CaptionStreamInfo> ClassifyCaptionComponent(
+[[nodiscard]] std::optional<aribcaption::Profile> ClassifyCaptionComponent(
     std::uint8_t component_tag, std::optional<std::uint16_t> data_component_id,
     bool one_seg_pmt_pid) {
     // Profile A caption: valid only with a Profile A (or absent) data_component_id
@@ -34,7 +34,7 @@ namespace {
             return std::nullopt;
         }
 
-        return CaptionStreamInfo{.profile = aribcaption::Profile::kProfileA};
+        return aribcaption::Profile::kProfileA;
     }
 
     // Profile C one-seg caption: valid only with a Profile C data_component_id on
@@ -44,7 +44,7 @@ namespace {
             return std::nullopt;
         }
 
-        return CaptionStreamInfo{.profile = aribcaption::Profile::kProfileC};
+        return aribcaption::Profile::kProfileC;
     }
 
     return std::nullopt;
@@ -63,8 +63,8 @@ namespace {
 
 }  // namespace
 
-std::optional<CaptionStreamInfo> ClassifyCaptionStream(ts::DuckContext& context, ts::PID pmt_pid,
-                                                       const ts::PMT::Stream& stream) {
+std::optional<aribcaption::Profile> ClassifyCaptionStream(ts::DuckContext& context, ts::PID pmt_pid,
+                                                          const ts::PMT::Stream& stream) {
     if (stream.stream_type != ts::ST_PES_PRIV) {
         return std::nullopt;
     }

@@ -71,11 +71,7 @@ class FakeCaptionDecoder final : public aribcap_dump::CaptionDecoder {
     }
 };
 
-aribcap_dump::CaptionStreamInfo CaptionInfo() {
-    return aribcap_dump::CaptionStreamInfo{
-        .profile = aribcaption::Profile::kProfileA,
-    };
-}
+constexpr aribcaption::Profile kCaptionProfile = aribcaption::Profile::kProfileA;
 
 aribcaption::CaptionChar MakeChar(const char* u8str, aribcaption::ColorRGBA color) {
     aribcaption::CaptionChar ch;
@@ -125,7 +121,7 @@ class CaptionRecordEmitterFixture {
             return decoder;
         };
         emitter = std::make_unique<aribcap_dump::CaptionRecordEmitter>(
-            sink, clock, CaptionInfo(), std::move(decoder_factory), options);
+            sink, clock, kCaptionProfile, std::move(decoder_factory), options);
     }
 
     void RecordClockReference(std::int64_t pcr_90k, std::int64_t unix_ms) {
@@ -351,7 +347,7 @@ TEST_CASE_METHOD(CaptionRecordEmitterFixture,
 
         return decoder;
     };
-    emitter = std::make_unique<aribcap_dump::CaptionRecordEmitter>(sink, clock, CaptionInfo(),
+    emitter = std::make_unique<aribcap_dump::CaptionRecordEmitter>(sink, clock, kCaptionProfile,
                                                                    std::move(decoder_factory));
 
     HandlePes({0x01, 0x02});
@@ -402,7 +398,7 @@ TEST_CASE_METHOD(
 
         return decoder;
     };
-    emitter = std::make_unique<aribcap_dump::CaptionRecordEmitter>(sink, clock, CaptionInfo(),
+    emitter = std::make_unique<aribcap_dump::CaptionRecordEmitter>(sink, clock, kCaptionProfile,
                                                                    std::move(decoder_factory));
 
     HandlePes({0x01, 0x02});
@@ -439,7 +435,7 @@ TEST_CASE_METHOD(CaptionRecordEmitterFixture,
 
         return decoder;
     };
-    emitter = std::make_unique<aribcap_dump::CaptionRecordEmitter>(sink, clock, CaptionInfo(),
+    emitter = std::make_unique<aribcap_dump::CaptionRecordEmitter>(sink, clock, kCaptionProfile,
                                                                    std::move(decoder_factory));
 
     HandlePes({0x01, 0x02});

@@ -37,8 +37,8 @@ class AribCaptionDecoder final : public CaptionDecoder {
    public:
     AribCaptionDecoder(const CaptionStreamInfo& info, aribcaption::LanguageId language_id)
         : decoder_(arib_context_) {
-        (void)decoder_.Initialize(aribcaption::EncodingScheme::kARIB_STD_B24_JIS, info.caption_type,
-                                  info.profile, language_id);
+        (void)decoder_.Initialize(aribcaption::EncodingScheme::kARIB_STD_B24_JIS,
+                                  aribcaption::CaptionType::kCaption, info.profile, language_id);
     }
 
     [[nodiscard]] aribcaption::DecodeStatus Decode(const std::uint8_t* data, std::size_t size,
@@ -90,17 +90,6 @@ class AribCaptionDecoder final : public CaptionDecoder {
     language_code.push_back(static_cast<char>(iso6392_language_code & 0xFF));
 
     return language_code;
-}
-
-[[nodiscard]] CaptionRecordType ToCaptionRecordType(aribcaption::CaptionType caption_type) {
-    switch (caption_type) {
-        case aribcaption::CaptionType::kCaption:
-            return CaptionRecordType::kCaption;
-        case aribcaption::CaptionType::kSuperimpose:
-            return CaptionRecordType::kSuperimpose;
-    }
-
-    return CaptionRecordType::kCaption;
 }
 
 [[nodiscard]] CaptionMetadata ExtractCaptionMetadata(const aribcaption::Caption& caption) {
@@ -211,7 +200,6 @@ void CaptionRecordEmitter::HandlePes(const ts::PESPacket& packet) {
             .text = std::move(text),
             .ruby = std::move(metadata.ruby),
             .color = std::move(metadata.color),
-            .caption_type = ToCaptionRecordType(info_.caption_type),
             .language_code = LanguageCodeToString(result.caption->iso6392_language_code),
         });
     }

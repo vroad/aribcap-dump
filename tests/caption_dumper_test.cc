@@ -107,10 +107,13 @@ ts::TSPacketVector PacketizeBinaryTable(ts::DuckContext& context, const ts::Bina
 }
 
 void AddCaptionStream(ts::DuckContext& context, ts::PMT& pmt, ts::PID pid) {
+    // Component tag 0x30 is the default caption ES tag.
     aribcap_dump::test::AddPrivatePesStream(context, pmt, pid, 0x30, 0x0008);
 }
 
-void AddSuperimposeStream(ts::DuckContext& context, ts::PMT& pmt, ts::PID pid) {
+void AddUnsupportedComponentStream(ts::DuckContext& context, ts::PMT& pmt, ts::PID pid) {
+    // Component tag 0x38 is the default superimpose ES tag; this tool doesn't classify or
+    // decode superimpose streams.
     aribcap_dump::test::AddPrivatePesStream(context, pmt, pid, 0x38, 0x0008);
 }
 
@@ -379,8 +382,9 @@ TEST_CASE_METHOD(CaptionDumperFixture,
     CHECK_FALSE(pes_demux.hasPID(kVideoPid));
 }
 
-TEST_CASE_METHOD(CaptionDumperFixture,
-                 "CaptionDumper re-registers a caption stream whose classification changes") {
+TEST_CASE_METHOD(
+    CaptionDumperFixture,
+    "CaptionDumper stops tracking a caption stream that PMT reclassifies as unsupported") {
     auto& pes_demux = PesDemux();
     const auto& emitters = CaptionRecordEmitters();
 
@@ -390,28 +394,28 @@ TEST_CASE_METHOD(CaptionDumperFixture,
     AddCaptionStream(context, caption_pmt, kCaptionPid);
     FeedPmt(caption_pmt, kPmtPid);
 
-    REQUIRE(emitters.at(kCaptionPid).Info().caption_type == aribcaption::CaptionType::kCaption);
+    REQUIRE(pes_demux.hasPID(kCaptionPid));
+    REQUIRE(emitters.count(kCaptionPid) == 1);
 
-    // Same ES PID, but the component tag now marks it as superimpose.
-    ts::PMT superimpose_pmt(1, true, kSid, kPcrPid);
-    AddSuperimposeStream(context, superimpose_pmt, kCaptionPid);
-    FeedPmt(superimpose_pmt, kPmtPid);
+    // Same ES PID, but the component tag now marks it as an unsupported (superimpose) stream.
+    ts::PMT unsupported_pmt(1, true, kSid, kPcrPid);
+    AddUnsupportedComponentStream(context, unsupported_pmt, kCaptionPid);
+    FeedPmt(unsupported_pmt, kPmtPid);
 
-    CHECK(pes_demux.hasPID(kCaptionPid));
-
-    CHECK(emitters.at(kCaptionPid).Info().caption_type == aribcaption::CaptionType::kSuperimpose);
+    CHECK_FALSE(pes_demux.hasPID(kCaptionPid));
+    CHECK(emitters.empty());
 }
 
-TEST_CASE_METHOD(
-    CaptionDumperFixture,
-    "CaptionDumper tracks caption and superimpose streams simultaneously and tears both down") {
+TEST_CASE_METHOD(CaptionDumperFixture,
+                 "CaptionDumper tracks multiple caption streams simultaneously and tears "
+                 "both down") {
     auto& pes_demux = PesDemux();
 
     FeedPat(0, kSid, kPmtPid);
 
     ts::PMT pmt(0, true, kSid, kPcrPid);
     AddCaptionStream(context, pmt, kCaptionPid);
-    AddSuperimposeStream(context, pmt, kSecondCaptionPid);
+    AddCaptionStream(context, pmt, kSecondCaptionPid);
     FeedPmt(pmt, kPmtPid);
 
     REQUIRE(pes_demux.hasPID(kCaptionPid));

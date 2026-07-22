@@ -73,7 +73,6 @@ class FakeCaptionDecoder final : public aribcap_dump::CaptionDecoder {
 
 aribcap_dump::CaptionStreamInfo CaptionInfo() {
     return aribcap_dump::CaptionStreamInfo{
-        .caption_type = aribcaption::CaptionType::kCaption,
         .profile = aribcaption::Profile::kProfileA,
     };
 }
@@ -178,7 +177,6 @@ TEST_CASE_METHOD(CaptionRecordEmitterFixture,
     REQUIRE(records.size() == 1);
     const auto* caption = std::get_if<aribcap_dump::CaptionRecord>(&records[0]);
     REQUIRE(caption != nullptr);
-    CHECK(caption->caption_type == aribcap_dump::CaptionRecordType::kCaption);
     REQUIRE(caption->language_code.has_value());
     CHECK(*caption->language_code == "jpn");
     REQUIRE(caption->time_ms.has_value());
@@ -219,35 +217,6 @@ TEST_CASE_METHOD(CaptionRecordEmitterFixture,
     REQUIRE(caption != nullptr);
     REQUIRE(caption->language_code.has_value());
     CHECK(*caption->language_code == "eng");
-}
-
-TEST_CASE_METHOD(CaptionRecordEmitterFixture,
-                 "CaptionRecordEmitter sets superimpose caption type") {
-    aribcap_dump::CaptionDecoderFactory decoder_factory =
-        [&](aribcaption::LanguageId language_id) -> std::unique_ptr<aribcap_dump::CaptionDecoder> {
-        auto decoder = std::make_unique<FakeCaptionDecoder>();
-
-        if (language_id == aribcaption::LanguageId::kFirst) {
-            fake_decoder = decoder.get();
-        }
-
-        return decoder;
-    };
-    emitter = std::make_unique<aribcap_dump::CaptionRecordEmitter>(
-        sink, clock,
-        aribcap_dump::CaptionStreamInfo{
-            .caption_type = aribcaption::CaptionType::kSuperimpose,
-            .profile = aribcaption::Profile::kProfileA,
-        },
-        std::move(decoder_factory));
-
-    HandlePes({0x01, 0x02});
-
-    const auto& records = Records();
-    REQUIRE(records.size() == 1);
-    const auto* caption = std::get_if<aribcap_dump::CaptionRecord>(&records[0]);
-    REQUIRE(caption != nullptr);
-    CHECK(caption->caption_type == aribcap_dump::CaptionRecordType::kSuperimpose);
 }
 
 TEST_CASE_METHOD(CaptionRecordEmitterFixture,

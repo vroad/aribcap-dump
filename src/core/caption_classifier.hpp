@@ -13,21 +13,20 @@ namespace aribcap_dump {
 
 // ARIB TR-B14 v6.7 Fascicle 2, section 4.2.8.1:
 //
-// component_tag values for caption/superimpose PES streams in the PMT
-// stream_identifier_descriptor.
+// component_tag values for caption PES streams in the PMT stream_identifier_descriptor.
 //
 // Layers other than the partial reception layer (full-seg reception):
-//   default caption ES:     0x30 (non-default component-group ESs use 0x31-0x37)
-//   default superimpose ES: 0x38 (non-default component-group ESs use 0x39-0x3F)
+//   default caption ES: 0x30 (non-default component-group ESs use 0x31-0x37)
 //
 // Partial reception layer (one-seg):
 //   caption ES: 0x87
 //
 // Non-default groups are not listed here: while non-default component-group values exist for
-// multi-view services (one caption and one superimpose ES per component group), this tool dumps
-// only the default group (component_group_id 0).
+// multi-view services (one caption ES per component group), this tool dumps only the default
+// group (component_group_id 0).
+// Superimpose ES component_tags (0x38-0x3F) are also out of scope: this tool does not classify
+// or decode superimpose streams.
 inline constexpr std::uint8_t kComponentTagDefaultCaption = 0x30;
-inline constexpr std::uint8_t kComponentTagDefaultSuperimpose = 0x38;
 inline constexpr std::uint8_t kComponentTagOneSegCaption = 0x87;
 
 // ARIB STD-B10 v5.13 Annex J, Table J-1:
@@ -46,19 +45,18 @@ inline constexpr std::uint16_t kDataComponentProfileC = 0x0012;
 inline constexpr ts::PID kOneSegPmtPidMin = 0x1FC8;
 inline constexpr ts::PID kOneSegPmtPidMax = 0x1FCF;
 
-// Caption type and profile used by libaribcaption to decode one ARIB caption or superimpose stream.
+// Profile used by libaribcaption to decode one ARIB caption stream.
 struct CaptionStreamInfo {
-    aribcaption::CaptionType caption_type;
     aribcaption::Profile profile;
 
     [[nodiscard]] bool operator==(const CaptionStreamInfo&) const = default;
 };
 
-// Classifies a PMT stream entry as a supported ARIB caption or superimpose stream,
-// using the PMT PID and stream descriptors.
+// Classifies a PMT stream entry as a supported ARIB caption stream, using the PMT PID
+// and stream descriptors.
 //
-// Returns the libaribcaption caption type and profile, or std::nullopt when the
-// stream is not a supported ARIB caption/superimpose stream.
+// Returns the libaribcaption profile, or std::nullopt when the stream is not a
+// supported ARIB caption stream.
 [[nodiscard]] std::optional<CaptionStreamInfo> ClassifyCaptionStream(ts::DuckContext& context,
                                                                      ts::PID pmt_pid,
                                                                      const ts::PMT::Stream& stream);

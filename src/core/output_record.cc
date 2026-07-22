@@ -105,17 +105,6 @@ void AddOptionalRfc3339(Json* object, const std::string& key,
 
 }  // namespace
 
-const char* ToString(CaptionRecordType caption_type) {
-    switch (caption_type) {
-        case CaptionRecordType::kCaption:
-            return "caption";
-        case CaptionRecordType::kSuperimpose:
-            return "superimpose";
-    }
-
-    return "caption";
-}
-
 const char* ToString(EitSection section) {
     switch (section) {
         case EitSection::kPresent:
@@ -139,7 +128,6 @@ std::string ToJsonLine(const OutputRecord& record) {
                 out["text"] = value.text;
                 out["ruby"] = RubyToJson(value.ruby);
                 AddOptional(&out, "color", value.color);
-                out["captionType"] = ToString(value.caption_type);
                 AddOptional(&out, "languageCode", value.language_code);
             } else if constexpr (std::is_same_v<Value, EitRecord>) {
                 out["type"] = "eit";

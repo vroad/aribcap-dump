@@ -14,18 +14,12 @@ namespace aribcap_dump {
 // Caption record types
 // -------------------------------------------------------------------------------------------------
 
-enum class CaptionRecordType {
-    kCaption,
-    kSuperimpose,
-};
-
 // One decoded ARIB caption line ready for JSONL output.
 struct CaptionRecord {
     std::optional<std::int64_t> time_ms;
     std::string text;
     std::vector<std::string> ruby;
     std::optional<std::string> color;
-    CaptionRecordType caption_type = CaptionRecordType::kCaption;
     std::optional<std::string> language_code;
 };
 
@@ -108,7 +102,6 @@ struct DiagnosticRecord {
 using OutputRecord = std::variant<CaptionRecord, EitRecord, DiagnosticRecord>;
 
 [[nodiscard]] std::string ToJsonLine(const OutputRecord& record);
-[[nodiscard]] const char* ToString(CaptionRecordType caption_type);
 [[nodiscard]] const char* ToString(EitSection section);
 
 }  // namespace aribcap_dump

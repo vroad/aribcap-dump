@@ -62,13 +62,13 @@ class CaptionClassifierFixture {
 // Accepted stream tests
 // -------------------------------------------------------------------------------------------------
 
+// component_tag values below are hardcoded instead of reusing
+// kComponentTagDefaultCaption/kComponentTagDefaultSuperimpose, so a wrong value in the
+// constant would still cause this test to fail.
 TEST_CASE_METHOD(CaptionClassifierFixture,
                  "ClassifyCaptionStream recognizes Profile A caption and superimpose streams") {
     SECTION("caption component") {
-        // 0x30/0x37 hardcoded per ARIB TR-B14 v6.7 Fascicle 2, section 4.2.8.1, independent of
-        // the production constants.
-        const auto component_tag = GENERATE(std::uint8_t{0x30}, std::uint8_t{0x37});
-        CAPTURE(component_tag);
+        constexpr std::uint8_t component_tag = 0x30;
 
         const auto& stream =
             AddCaptionComponent(component_tag, aribcap_dump::kDataComponentProfileA);
@@ -78,10 +78,7 @@ TEST_CASE_METHOD(CaptionClassifierFixture,
     }
 
     SECTION("superimpose component") {
-        // 0x38/0x3F hardcoded per ARIB TR-B14 v6.7 Fascicle 2, section 4.2.8.1, independent of
-        // the production constants.
-        const auto component_tag = GENERATE(std::uint8_t{0x38}, std::uint8_t{0x3F});
-        CAPTURE(component_tag);
+        constexpr std::uint8_t component_tag = 0x38;
 
         const auto& stream =
             AddCaptionComponent(component_tag, aribcap_dump::kDataComponentProfileA);
@@ -92,19 +89,20 @@ TEST_CASE_METHOD(CaptionClassifierFixture,
 
     SECTION("missing data_component_id defaults to Profile A") {
         const auto& stream =
-            AddCaptionComponent(aribcap_dump::kComponentTagCaptionMin, std::nullopt);
+            AddCaptionComponent(aribcap_dump::kComponentTagDefaultCaption, std::nullopt);
 
         CheckCaptionStream(stream, kNonOneSegPmtPid, aribcaption::Profile::kProfileA,
                            aribcaption::CaptionType::kCaption);
     }
 }
 
+// 0x1FC8/0x1FCF hardcoded instead of reusing kOneSegPmtPidMin/kOneSegPmtPidMax, so a wrong
+// value in either constant would still cause this test to fail.
 TEST_CASE_METHOD(CaptionClassifierFixture,
                  "ClassifyCaptionStream recognizes Profile C one-seg caption streams") {
     const auto& stream = AddCaptionComponent(aribcap_dump::kComponentTagOneSegCaption,
                                              aribcap_dump::kDataComponentProfileC);
 
-    // 0x1FC8/0x1FCF hardcoded per ARIB TR-B14, independent of the production constants.
     const ts::PID pmt_pid = GENERATE(ts::PID{0x1FC8}, ts::PID{0x1FCF});
     CAPTURE(pmt_pid);
 
@@ -134,11 +132,17 @@ TEST_CASE_METHOD(CaptionClassifierFixture,
     }
 
     SECTION("unknown component tag") {
-        // Just outside the ARIB TR-B14 v6.7 Fascicle 2, section 4.2.8.1 caption/superimpose
-        // ranges (0x30-0x3F) on either side, plus one value far outside any range, hardcoded
-        // independently of the production constants.
+        // Component_tag values this test expects the classifier function to reject:
+        //
+        //   0x2F/0x40: outside the caption/superimpose ranges (0x30-0x3F)
+        //   0x31, 0x39: first non-default tag in the caption/superimpose range
+        //   0x37, 0x3F: last non-default tag in the caption/superimpose range
+        //
+        // The classifier function only accepts the default caption/superimpose tags (0x30/0x38)
+        // and the one-seg tag (0x87).
         const auto component_tag =
-            GENERATE(std::uint8_t{0x2F}, std::uint8_t{0x40}, kUnknownComponentTag);
+            GENERATE(std::uint8_t{0x2F}, std::uint8_t{0x31}, std::uint8_t{0x37}, std::uint8_t{0x39},
+                     std::uint8_t{0x3F}, std::uint8_t{0x40}, kUnknownComponentTag);
         CAPTURE(component_tag);
 
         const auto& stream =
@@ -148,8 +152,8 @@ TEST_CASE_METHOD(CaptionClassifierFixture,
     }
 
     SECTION("unsupported data_component_id") {
-        const auto& stream =
-            AddCaptionComponent(aribcap_dump::kComponentTagCaptionMin, kUnsupportedDataComponentId);
+        const auto& stream = AddCaptionComponent(aribcap_dump::kComponentTagDefaultCaption,
+                                                 kUnsupportedDataComponentId);
 
         CheckRejected(stream, kNonOneSegPmtPid);
     }
@@ -169,14 +173,14 @@ TEST_CASE_METHOD(CaptionClassifierFixture,
     }
 
     SECTION("Profile A caption descriptor in the one-seg PMT PID range") {
-        const auto& stream = AddCaptionComponent(aribcap_dump::kComponentTagCaptionMin,
+        const auto& stream = AddCaptionComponent(aribcap_dump::kComponentTagDefaultCaption,
                                                  aribcap_dump::kDataComponentProfileA);
 
         CheckRejected(stream, aribcap_dump::kOneSegPmtPidMin);
     }
 
     SECTION("Profile A superimpose descriptor in the one-seg PMT PID range") {
-        const auto& stream = AddCaptionComponent(aribcap_dump::kComponentTagSuperimposeMin,
+        const auto& stream = AddCaptionComponent(aribcap_dump::kComponentTagDefaultSuperimpose,
                                                  aribcap_dump::kDataComponentProfileA);
 
         CheckRejected(stream, aribcap_dump::kOneSegPmtPidMax);

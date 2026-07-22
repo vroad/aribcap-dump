@@ -18,13 +18,12 @@ namespace {
     return !data_component_id.has_value() || data_component_id == kDataComponentProfileA;
 }
 
-[[nodiscard]] bool IsCaptionComponentTag(std::uint8_t component_tag) {
-    return component_tag >= kComponentTagCaptionMin && component_tag <= kComponentTagCaptionMax;
+[[nodiscard]] bool IsDefaultCaptionComponentTag(std::uint8_t component_tag) {
+    return component_tag == kComponentTagDefaultCaption;
 }
 
-[[nodiscard]] bool IsSuperimposeComponentTag(std::uint8_t component_tag) {
-    return component_tag >= kComponentTagSuperimposeMin &&
-           component_tag <= kComponentTagSuperimposeMax;
+[[nodiscard]] bool IsDefaultSuperimposeComponentTag(std::uint8_t component_tag) {
+    return component_tag == kComponentTagDefaultSuperimpose;
 }
 
 // Applies the ARIB caption-pairing rules to an already-extracted
@@ -34,13 +33,14 @@ namespace {
     bool one_seg_pmt_pid) {
     // Profile A caption/superimpose: valid only with a Profile A (or absent)
     // data_component_id on a non-one-seg PID.
-    if (IsCaptionComponentTag(component_tag) || IsSuperimposeComponentTag(component_tag)) {
+    if (IsDefaultCaptionComponentTag(component_tag) ||
+        IsDefaultSuperimposeComponentTag(component_tag)) {
         if (one_seg_pmt_pid || !IsSupportedProfileAId(data_component_id)) {
             return std::nullopt;
         }
 
         return CaptionStreamInfo{
-            .caption_type = IsSuperimposeComponentTag(component_tag)
+            .caption_type = IsDefaultSuperimposeComponentTag(component_tag)
                                 ? aribcaption::CaptionType::kSuperimpose
                                 : aribcaption::CaptionType::kCaption,
             .profile = aribcaption::Profile::kProfileA,

@@ -16,16 +16,18 @@ namespace aribcap_dump {
 // component_tag values for caption/superimpose PES streams in the PMT
 // stream_identifier_descriptor.
 //
-// Layers other than the partial reception layer:
-//   caption ES:     0x30..0x37, default caption ES:     0x30
-//   superimpose ES: 0x38..0x3F, default superimpose ES: 0x38
+// Layers other than the partial reception layer (full-seg reception):
+//   default caption ES:     0x30 (non-default component-group ESs use 0x31-0x37)
+//   default superimpose ES: 0x38 (non-default component-group ESs use 0x39-0x3F)
 //
 // Partial reception layer (one-seg):
 //   caption ES: 0x87
-inline constexpr std::uint8_t kComponentTagCaptionMin = 0x30;
-inline constexpr std::uint8_t kComponentTagCaptionMax = 0x37;
-inline constexpr std::uint8_t kComponentTagSuperimposeMin = 0x38;
-inline constexpr std::uint8_t kComponentTagSuperimposeMax = 0x3F;
+//
+// Non-default groups are not listed here: while non-default component-group values exist for
+// multi-view services (one caption and one superimpose ES per component group), this tool dumps
+// only the default group (component_group_id 0).
+inline constexpr std::uint8_t kComponentTagDefaultCaption = 0x30;
+inline constexpr std::uint8_t kComponentTagDefaultSuperimpose = 0x38;
 inline constexpr std::uint8_t kComponentTagOneSegCaption = 0x87;
 
 // ARIB STD-B10 v5.13 Annex J, Table J-1:
